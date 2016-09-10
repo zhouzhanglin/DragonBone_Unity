@@ -20,7 +20,7 @@ namespace DragonBone
 
 		[Header("Settting")]
 		public float zoffset = 0.003f;
-		public bool useUnitySprite = false; //Is used Unity Sprite2D
+		public bool useUnitySprite = false; //is used Unity Sprite2D
 		public bool isSingleSprite = false;//is atlas textrue
 
 		[Header("Anim File")]
@@ -66,7 +66,8 @@ namespace DragonBone
 
 		[MenuItem("DragonBone/DragonBone Panel (All Function)")]
 		static void CreateWizard () {
-			ScriptableWizard.DisplayWizard<ArmatureEditor>("Create DragonBone", "Create");
+			ArmatureEditor editor = ScriptableWizard.DisplayWizard<ArmatureEditor>("Create DragonBone", "Create");
+			editor.minSize = new Vector2(200f,400f);
 		}
 
 		[MenuItem("DragonBone/DragonBone (SpriteFrame)")]
