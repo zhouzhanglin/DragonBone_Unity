@@ -85,15 +85,21 @@ namespace DragonBone
 			{
 				string dirPath = AssetDatabase.GetAssetOrScenePath(Selection.activeObject);
 				if(Directory.Exists(dirPath)){
-					string animJsonPath=null,texturePath=null,textureJsonPath=null;
-					foreach (string path in Directory.GetFiles(dirPath))  
+					string animJsonPath=null;
+					Dictionary<string,string> texturePathKV = new Dictionary<string, string>();
+					Dictionary<string,string> textureJsonPathKV = new Dictionary<string, string>();
+					foreach (string path in Directory.GetFiles(dirPath))
 					{  
-						if(path.IndexOf("texture.json")>-1 && path.LastIndexOf(".meta")==-1 && System.IO.Path.GetExtension(path) == ".json"){
-							textureJsonPath = path;
+						if(System.IO.Path.GetExtension(path) == ".json" && path.IndexOf("texture")>-1 && path.LastIndexOf(".meta")==-1){
+							int start = path.LastIndexOf("/")+1;
+							int end = path.LastIndexOf(".json");
+							textureJsonPathKV[path.Substring(start,end-start)] = path;
 							continue;
 						}
-						if(path.IndexOf("texture")>-1 && path.LastIndexOf(".meta")==-1 && System.IO.Path.GetExtension(path) == ".png" ){
-							texturePath = path;
+						if(System.IO.Path.GetExtension(path) == ".png" && path.IndexOf("texture")>-1 && path.LastIndexOf(".meta")==-1){
+							int start = path.LastIndexOf("/")+1;
+							int end = path.LastIndexOf(".png");
+							texturePathKV[path.Substring(start,end-start)] = path;
 							continue;
 						}
 						if (path.IndexOf("texture.json")==-1 && System.IO.Path.GetExtension(path) == ".json" && path.LastIndexOf(".meta")==-1)  
@@ -101,11 +107,24 @@ namespace DragonBone
 							animJsonPath = path;
 						}
 					} 
-					if(!string.IsNullOrEmpty(animJsonPath) && !string.IsNullOrEmpty(texturePath) && !string.IsNullOrEmpty(textureJsonPath)){
+					if(!string.IsNullOrEmpty(animJsonPath) && texturePathKV.Count>0 && textureJsonPathKV.Count>0){
 						ArmatureEditor instance  = ScriptableObject.CreateInstance<ArmatureEditor>();
 						instance.useUnitySprite = useUnitySprite;
-						instance.altasTextAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(textureJsonPath);
-						instance.altasTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
+						List<Atlas> atlasList = new List<Atlas>();
+						foreach(string name in texturePathKV.Keys){
+							if(textureJsonPathKV.ContainsKey(name)){
+								if(instance.altasTexture==null){
+									instance.altasTextAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(textureJsonPathKV[name]);
+									instance.altasTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePathKV[name]);
+								}else{
+									Atlas atlas = new Atlas();
+									atlas.atlasText = AssetDatabase.LoadAssetAtPath<TextAsset>(textureJsonPathKV[name]);
+									atlas.texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePathKV[name]);
+									atlasList.Add(atlas);
+								}
+							}
+						}
+						instance.otherTextures = atlasList.ToArray();
 						instance.animTextAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(animJsonPath);
 						if(instance.altasTexture&&instance.altasTextAsset&&instance.animTextAsset){
 							instance.OnWizardCreate();
