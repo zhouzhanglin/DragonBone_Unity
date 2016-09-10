@@ -575,7 +575,6 @@ namespace DragonBone
 			for(int i=0;i<len;++i){
 				if(localBones[i] == globalBone) return i;
 			}
-			Debug.Log(globalBoneIndex);
 			return globalBoneIndex;
 		}
 
