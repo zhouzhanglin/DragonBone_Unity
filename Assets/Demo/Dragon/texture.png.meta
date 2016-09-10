@@ -1,0 +1,311 @@
+fileFormatVersion: 2
+guid: d5e7992cb320048e1bd866412af79b58
+timeCreated: 1471606455
+licenseType: Pro
+TextureImporter:
+  fileIDToRecycleName:
+    21300000: parts_handR
+    21300002: parts_armUpperR
+    21300004: parts_eyeR
+    21300006: parts_legL
+    21300008: parts_armL
+    21300010: parts_handL
+    21300012: parts_tailTip
+    21300014: parts_legR
+    21300016: parts_body
+    21300018: parts_head
+    21300020: parts_beardR
+    21300022: parts_tail
+    21300024: parts_clothes1
+    21300026: parts_beardL
+    21300028: parts_armUpperL
+    21300030: parts_eyeL
+    21300032: parts_hair
+    21300034: parts_armR
+  serializedVersion: 2
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    linearTexture: 0
+    correctGamma: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+  isReadable: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 0
+  cubemapConvolution: 0
+  cubemapConvolutionSteps: 7
+  cubemapConvolutionExponent: 1.5
+  seamlessCubemap: 0
+  textureFormat: -1
+  maxTextureSize: 2048
+  textureSettings:
+    filterMode: -1
+    aniso: 16
+    mipBias: -1
+    wrapMode: 1
+  nPOTScale: 0
+  lightmap: 0
+  rGBM: 0
+  compressionQuality: 50
+  allowsAlphaSplitting: 0
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spritePixelsToUnits: 100
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  buildTargetSettings: []
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: parts_handR
+      rect:
+        serializedVersion: 2
+        x: 213
+        y: 53
+        width: 49
+        height: 29
+      alignment: 9
+      pivot: {x: 0.5102041, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_armUpperR
+      rect:
+        serializedVersion: 2
+        x: 383
+        y: 17
+        width: 80
+        height: 47
+      alignment: 9
+      pivot: {x: 0.50625, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_eyeR
+      rect:
+        serializedVersion: 2
+        x: 491
+        y: 97
+        width: 19
+        height: 29
+      alignment: 9
+      pivot: {x: 0.5263158, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_legL
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 46
+        width: 102
+        height: 90
+      alignment: 9
+      pivot: {x: 0.50490195, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_armL
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 13
+        width: 24
+        height: 40
+      alignment: 9
+      pivot: {x: 0.5208333, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_handL
+      rect:
+        serializedVersion: 2
+        x: 441
+        y: 87
+        width: 48
+        height: 39
+      alignment: 9
+      pivot: {x: 0.5104167, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_tailTip
+      rect:
+        serializedVersion: 2
+        x: 383
+        y: 66
+        width: 56
+        height: 105
+      alignment: 9
+      pivot: {x: 0.5089286, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_legR
+      rect:
+        serializedVersion: 2
+        x: 121
+        y: 55
+        width: 90
+        height: 116
+      alignment: 9
+      pivot: {x: 0.50555557, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_body
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 138
+        width: 118
+        height: 174
+      alignment: 9
+      pivot: {x: 0.5042373, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_head
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 314
+        width: 169
+        height: 197
+      alignment: 9
+      pivot: {x: 0.5029586, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_beardR
+      rect:
+        serializedVersion: 2
+        x: 441
+        y: 67
+        width: 68
+        height: 18
+      alignment: 9
+      pivot: {x: 0.50735295, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_tail
+      rect:
+        serializedVersion: 2
+        x: 121
+        y: 173
+        width: 108
+        height: 139
+      alignment: 9
+      pivot: {x: 0.5046296, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_clothes1
+      rect:
+        serializedVersion: 2
+        x: 213
+        y: 84
+        width: 104
+        height: 87
+      alignment: 9
+      pivot: {x: 0.5048077, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_beardL
+      rect:
+        serializedVersion: 2
+        x: 105
+        y: 35
+        width: 60
+        height: 18
+      alignment: 9
+      pivot: {x: 0.5083333, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_armUpperL
+      rect:
+        serializedVersion: 2
+        x: 441
+        y: 128
+        width: 56
+        height: 43
+      alignment: 9
+      pivot: {x: 0.5089286, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_eyeL
+      rect:
+        serializedVersion: 2
+        x: 193
+        y: 30
+        width: 14
+        height: 23
+      alignment: 9
+      pivot: {x: 0.53571427, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_hair
+      rect:
+        serializedVersion: 2
+        x: 319
+        y: 30
+        width: 62
+        height: 141
+      alignment: 9
+      pivot: {x: 0.5080645, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    - serializedVersion: 2
+      name: parts_armR
+      rect:
+        serializedVersion: 2
+        x: 465
+        y: 26
+        width: 23
+        height: 39
+      alignment: 9
+      pivot: {x: 0.5217391, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      tessellationDetail: -1
+    outline: []
+  spritePackingTag: 
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
