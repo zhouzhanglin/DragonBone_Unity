@@ -18,7 +18,7 @@ namespace DragonBone
 			public TextAsset atlasText;
 		}
 
-		[Header("Settting")]
+		[Header("Setting")]
 		public float zoffset = 0.003f;
 		public bool useUnitySprite = false; //is used Unity Sprite2D
 		public bool isSingleSprite = false;//is atlas textrue

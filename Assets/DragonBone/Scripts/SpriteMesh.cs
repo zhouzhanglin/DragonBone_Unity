@@ -207,13 +207,14 @@ namespace DragonBone
 
 
 		public void UpdateMesh(){
-			if(m_createdMesh && m_mesh && vertControlTrans!=null){
-				int len = vertControlTrans.Length;
-				for(int i=0;i<len;++i){
-					vertices[i] = vertControlTrans[i].localPosition;
+			if(m_createdMesh && m_mesh){
+				if(vertControlTrans!=null){
+					int len = vertControlTrans.Length;
+					for(int i=0;i<len;++i){
+						vertices[i] = vertControlTrans[i].localPosition;
+					}
+					m_mesh.vertices=vertices;
 				}
-				m_mesh.vertices=vertices;
-
 				color = m_color;
 			}
 		}
