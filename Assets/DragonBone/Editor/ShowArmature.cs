@@ -595,7 +595,7 @@ namespace DragonBone
 
 					Vector3 v = Vector3.right * targetBoneData.length*0.01f;
 					v = targetBone.TransformPoint(v);
-					GameObject go = new GameObject("IkEnd");
+					GameObject go = new GameObject(ikData.name);
 					go.transform.parent = targetBone;
 					go.transform.position = v;
 
