@@ -31,10 +31,13 @@ namespace DragonBone
 			path+="/";
 
 			Animator animator= armatureEditor.armature.gameObject.AddComponent<Animator>();
-			AnimatorController controller = AnimatorController.CreateAnimatorControllerAtPath(path+armatureEditor.armature.name+".controller");
+			AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(path+armatureEditor.armature.name+".controller");
+			AnimatorStateMachine rootStateMachine = null;
+			if(controller==null){
+				controller = AnimatorController.CreateAnimatorControllerAtPath(path+armatureEditor.armature.name+".controller");
+				rootStateMachine = controller.layers[0].stateMachine;
+			}
 			animator.runtimeAnimatorController = controller;
-			// Add StateMachines
-			var rootStateMachine = controller.layers[0].stateMachine;
 			if(armatureEditor.armatureData.animDatas!=null)
 			{
 				for(int i=0;i<armatureEditor.armatureData.animDatas.Length ;++i)
@@ -56,13 +59,14 @@ namespace DragonBone
 					serializedClip.ApplyModifiedProperties();
 
 					AssetDatabase.CreateAsset(clip,path+clip.name+".anim");
-
-					AnimatorState state = rootStateMachine.AddState(clip.name);
-					state.motion = clip;
+					if(rootStateMachine!=null){
+						AnimatorState state = rootStateMachine.AddState(clip.name);
+						state.motion = clip;
+					}
 				}
 				AssetDatabase.SaveAssets();
 			}
-			if(rootStateMachine.states!=null && rootStateMachine.states.Length>0){
+			if(rootStateMachine!=null && rootStateMachine.states!=null && rootStateMachine.states.Length>0){
 				rootStateMachine.defaultState= rootStateMachine.states[0].state;
 			}
 
