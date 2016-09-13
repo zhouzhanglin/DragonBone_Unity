@@ -360,11 +360,15 @@ namespace DragonBone
 				if(localPosFlag){
 					if(isHaveCurve) SetCustomCurveTangents(xcurve,animSubData.frameDatas);
 					CurveExtension.UpdateAllLinearTangents(xcurve);
-					clip.SetCurve(path,typeof(Transform),"localPosition.x",xcurve);
+					AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve(path,typeof(Transform),"m_LocalPosition.x" ),xcurve);
 					if(isHaveCurve) SetCustomCurveTangents(ycurve,animSubData.frameDatas);
 					CurveExtension.UpdateAllLinearTangents(ycurve);
-					clip.SetCurve(path,typeof(Transform),"localPosition.y",ycurve);
-					clip.SetCurve(path,typeof(Transform),"localPosition.z",zcurve);
+					AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve(path,typeof(Transform),"m_LocalPosition.y" ),ycurve);
+
+					if(!boneOrSlot && !isffd){
+						//no order animation
+//						AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve(path,typeof(Transform),"m_LocalPosition.z" ),zcurve);
+					}
 				}
 
 				bool localSc = false;
@@ -411,28 +415,28 @@ namespace DragonBone
 								{
 									if(isHaveCurve) SetCustomCurveTangents(color_rcurve,animSubData.frameDatas);
 									CurveExtension.UpdateAllLinearTangents(color_rcurve);
-									clip.SetCurve(childPath,typeof(SpriteRenderer),"m_Color.r",color_rcurve);
+									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteRenderer ), "m_Color.r" ), color_rcurve );
 								}
 
 								if(color_gcurve.keys !=null&& color_gcurve.keys.Length>0&& CheckCurveValid(color_gcurve,defaultColorData.gM+defaultColorData.g0)) 
 								{
 									if(isHaveCurve) SetCustomCurveTangents(color_gcurve,animSubData.frameDatas);
 									CurveExtension.UpdateAllLinearTangents(color_gcurve);
-									clip.SetCurve(childPath,typeof(SpriteRenderer),"m_Color.g",color_gcurve);
+									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteRenderer ), "m_Color.g" ), color_gcurve );
 								}
 
 								if(color_bcurve.keys !=null&& color_bcurve.keys.Length>0&& CheckCurveValid(color_bcurve,defaultColorData.bM+defaultColorData.b0)) 
 								{
 									if(isHaveCurve) SetCustomCurveTangents(color_bcurve,animSubData.frameDatas);
 									CurveExtension.UpdateAllLinearTangents(color_bcurve);
-									clip.SetCurve(childPath,typeof(SpriteRenderer),"m_Color.b",color_bcurve);
+									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteRenderer ), "m_Color.b" ), color_bcurve );
 								}
 
 								if(color_acurve.keys !=null&& color_acurve.keys.Length>0&& CheckCurveValid(color_acurve,defaultColorData.aM+defaultColorData.a0)) 
 								{
 									if(isHaveCurve) SetCustomCurveTangents(color_acurve,animSubData.frameDatas);
 									CurveExtension.UpdateAllLinearTangents(color_acurve);
-									clip.SetCurve(childPath,typeof(SpriteRenderer),"m_Color.a",color_acurve);
+									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteRenderer ), "m_Color.a" ), color_acurve );
 								}
 							}
 						}
@@ -448,7 +452,7 @@ namespace DragonBone
 								{
 									if(isHaveCurve) SetCustomCurveTangents(color_rcurve,animSubData.frameDatas);
 									CurveExtension.UpdateAllLinearTangents(color_rcurve);
-									clip.SetCurve(childPath,typeof(SpriteFrame),"m_color.r",color_rcurve);
+									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteFrame ), "m_color.r" ), color_rcurve );
 									haveAnim = true;
 								}
 
@@ -456,7 +460,7 @@ namespace DragonBone
 								{
 									if(isHaveCurve) SetCustomCurveTangents(color_gcurve,animSubData.frameDatas);
 									CurveExtension.UpdateAllLinearTangents(color_gcurve);
-									clip.SetCurve(childPath,typeof(SpriteFrame),"m_color.g",color_gcurve);
+									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteFrame ), "m_color.g" ), color_gcurve );
 									haveAnim = true;
 								}
 
@@ -464,7 +468,7 @@ namespace DragonBone
 								{
 									if(isHaveCurve) SetCustomCurveTangents(color_bcurve,animSubData.frameDatas);
 									CurveExtension.UpdateAllLinearTangents(color_bcurve);
-									clip.SetCurve(childPath,typeof(SpriteFrame),"m_color.b",color_bcurve);
+									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteFrame ), "m_color.b" ), color_bcurve );
 									haveAnim = true;
 								}
 
@@ -472,7 +476,7 @@ namespace DragonBone
 								{
 									if(isHaveCurve) SetCustomCurveTangents(color_acurve,animSubData.frameDatas);
 									CurveExtension.UpdateAllLinearTangents(color_acurve);
-									clip.SetCurve(childPath,typeof(SpriteFrame),"m_color.a",color_acurve);
+									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteFrame ), "m_color.a" ), color_acurve );
 									haveAnim = true;
 								}
 								if(haveAnim){
@@ -490,7 +494,7 @@ namespace DragonBone
 								{
 									if(isHaveCurve) SetCustomCurveTangents(color_rcurve,animSubData.frameDatas);
 									CurveExtension.UpdateAllLinearTangents(color_rcurve);
-									clip.SetCurve(childPath,typeof(SpriteMesh),"m_color.r",color_rcurve);
+									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteMesh ), "m_color.r" ), color_rcurve );
 									haveAnim = true;
 								}
 
@@ -498,7 +502,7 @@ namespace DragonBone
 								{
 									if(isHaveCurve) SetCustomCurveTangents(color_gcurve,animSubData.frameDatas);
 									CurveExtension.UpdateAllLinearTangents(color_gcurve);
-									clip.SetCurve(childPath,typeof(SpriteMesh),"m_color.g",color_gcurve);
+									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteMesh ), "m_color.g" ), color_gcurve );
 									haveAnim = true;
 								}
 
@@ -506,7 +510,7 @@ namespace DragonBone
 								{
 									if(isHaveCurve) SetCustomCurveTangents(color_bcurve,animSubData.frameDatas);
 									CurveExtension.UpdateAllLinearTangents(color_bcurve);
-									clip.SetCurve(childPath,typeof(SpriteMesh),"m_color.b",color_bcurve);
+									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteMesh ), "m_color.b" ), color_bcurve );
 									haveAnim = true;
 								}
 
@@ -514,7 +518,7 @@ namespace DragonBone
 								{
 									if(isHaveCurve) SetCustomCurveTangents(color_acurve,animSubData.frameDatas);
 									CurveExtension.UpdateAllLinearTangents(color_acurve);
-									clip.SetCurve(childPath,typeof(SpriteMesh),"m_color.a",color_acurve);
+									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteMesh ), "m_color.a" ), color_acurve );
 									haveAnim = true;
 								}
 								if(haveAnim){
@@ -558,10 +562,10 @@ namespace DragonBone
 									if(vcurveFlag){
 										if(isHaveCurve) SetCustomCurveTangents(vertex_xcurve,animSubData.frameDatas);
 										CurveExtension.UpdateAllLinearTangents(vertex_xcurve);
-										clip.SetCurve(ctrlPath,typeof(Transform),"localPosition.x",vertex_xcurve);
+										AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( ctrlPath, typeof( Transform ), "m_LocalPosition.x" ), vertex_xcurve );
 										if(isHaveCurve) SetCustomCurveTangents(vertex_ycurve,animSubData.frameDatas);
 										CurveExtension.UpdateAllLinearTangents(vertex_ycurve);
-										clip.SetCurve(ctrlPath,typeof(Transform),"localPosition.y",vertex_ycurve);
+										AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( ctrlPath, typeof( Transform ), "m_LocalPosition.y" ), vertex_ycurve );
 									}
 								}
 							}
