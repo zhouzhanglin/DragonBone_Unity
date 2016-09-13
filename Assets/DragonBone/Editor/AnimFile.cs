@@ -43,7 +43,14 @@ namespace DragonBone
 				for(int i=0;i<armatureEditor.armatureData.animDatas.Length ;++i)
 				{
 					DragonBoneData.AnimationData animationData = armatureEditor.armatureData.animDatas[i];
-					AnimationClip clip = new AnimationClip();
+					string clipPath = path+animationData.name+".anim";
+					AnimationClip clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
+					if(clip==null){
+						clip = new AnimationClip();
+						AssetDatabase.CreateAsset(clip,clipPath);
+					}else{
+						clip.ClearCurves();
+					}
 					clip.name = animationData.name;
 					clip.frameRate = armatureEditor.armatureData.frameRate;
 
@@ -58,7 +65,6 @@ namespace DragonBone
 					clipSettings.loopTime = animationData.playTimes==0;
 					serializedClip.ApplyModifiedProperties();
 
-					AssetDatabase.CreateAsset(clip,path+clip.name+".anim");
 					if(rootStateMachine!=null){
 						AnimatorState state = rootStateMachine.AddState(clip.name);
 						state.motion = clip;
