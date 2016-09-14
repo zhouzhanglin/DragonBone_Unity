@@ -202,8 +202,9 @@ namespace DragonBone
 						if(slot && skinSlotData.displays!=null && skinSlotData.displays.Length>0){
 							for(int k=0;k<skinSlotData.displays.Length;++k){
 								DragonBoneData.SkinSlotDisplayData displayData= skinSlotData.displays[k];
-								ArmatureEditor.Atlas atlas = armatureEditor.GetAtlasByTextureName(displayData.textureName);
+								if(displayData.type!="image" && displayData.type!="mesh")  continue;
 
+								ArmatureEditor.Atlas atlas = armatureEditor.GetAtlasByTextureName(displayData.textureName);
 								if(!armatureEditor.isSingleSprite){
 									atlasMat = matKV[atlas.texture];
 									frame = frameKV[atlas.texture];
