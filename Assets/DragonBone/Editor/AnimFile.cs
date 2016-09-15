@@ -40,10 +40,12 @@ namespace DragonBone
 			animator.runtimeAnimatorController = controller;
 			if(armatureEditor.armatureData.animDatas!=null)
 			{
-				for(int i=0;i<armatureEditor.armatureData.animDatas.Length ;++i)
+				int len = armatureEditor.armatureData.animDatas.Length;
+				for(int i=0;i<len ;++i)
 				{
 					DragonBoneData.AnimationData animationData = armatureEditor.armatureData.animDatas[i];
-					string clipPath = path+armatureEditor.armature.name+"_"+ animationData.name+".anim";
+					string clipPath = path+ animationData.name+".anim";
+					if(len>1) clipPath = path+armatureEditor.armature.name+"_"+ animationData.name+".anim";
 					AnimationClip clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
 					if(clip==null){
 						clip = new AnimationClip();
@@ -257,10 +259,10 @@ namespace DragonBone
 						if(frameData.color!=null){
 							if(defaultColorData==null) defaultColorData = new DragonBoneData.ColorData();
 							Color c = new Color(  
-								(defaultColorData.rM+defaultColorData.r0)*frameData.color.rM+frameData.color.r0,
-								(defaultColorData.gM+defaultColorData.g0)*frameData.color.gM+frameData.color.g0,
-								(defaultColorData.bM+defaultColorData.b0)*frameData.color.bM+frameData.color.b0,
-								(defaultColorData.aM+defaultColorData.a0)*frameData.color.aM+frameData.color.a0
+								frameData.color.rM+frameData.color.r0,
+								frameData.color.gM+frameData.color.g0,
+								frameData.color.bM+frameData.color.b0,
+								frameData.color.aM+frameData.color.a0
 							);
 							color_rcurve.AddKey(KeyframeUtil.GetNew(during,c.r,tanModeL,tanModeR));
 							color_gcurve.AddKey(KeyframeUtil.GetNew(during,c.g,tanModeL,tanModeR));

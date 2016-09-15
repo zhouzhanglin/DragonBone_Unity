@@ -108,7 +108,6 @@ namespace DragonBone
 			public string type = "image";//armature,mesh
 			public Vector2 pivot = new Vector2(0.5f,0.5f);
 			public TransformData transform;
-			public ColorData color;
 
 			//网格变化
 			public Vector3[] vertices;

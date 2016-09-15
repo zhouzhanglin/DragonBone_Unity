@@ -224,7 +224,7 @@ namespace DragonBone
 												textureImporter.spritePivot=new Vector2((displayData.pivot.x+sprite.rect.width/2)/sprite.rect.width,(displayData.pivot.y+sprite.rect.height/2)/sprite.rect.height);
 												AssetDatabase.ImportAsset(spritePath, ImportAssetOptions.ForceUpdate);
 											}
-											sprites.Add(ShowUnitySpriteSingle(sprite,displayData,slot));
+											sprites.Add(ShowUnitySpriteSingle(sprite,displayData,slot,slotData));
 										}
 										else
 										{
@@ -237,12 +237,12 @@ namespace DragonBone
 												metaData.pivot = new Vector2((displayData.pivot.x+metaData.rect.width/2)/metaData.rect.width,(displayData.pivot.y+metaData.rect.height/2)/metaData.rect.height);
 											}
 											metaDatas.Add(metaData);
-											sprites.Add(ShowUnitySprite(atlasMat,displayData,slot,metaData));
+											sprites.Add(ShowUnitySprite(atlasMat,displayData,slot,metaData,slotData));
 										}
 									}
 									else
 									{
-										ShowSpriteFrame(frame,atlasMat,displayData,slot);
+										ShowSpriteFrame(frame,atlasMat,displayData,slot,slotData);
 									}
 								}
 								else if(displayData.type=="mesh")
@@ -277,7 +277,7 @@ namespace DragonBone
 										}
 									}
 									if(rect.width>0&&rect.height>0 && atlasMat && atlasMat.mainTexture){
-										ShowSpriteMesh(rect,atlasMat,displayData,slot,armatureEditor);
+										ShowSpriteMesh(rect,atlasMat,displayData,slot,armatureEditor,slotData);
 										++meshSpriteCount;
 									}
 								}
@@ -339,7 +339,7 @@ namespace DragonBone
 
 		}
 
-		static void ShowSpriteFrame(SpriteFrame frame,Material mat,DragonBoneData.SkinSlotDisplayData displayData,Transform slot){
+		static void ShowSpriteFrame(SpriteFrame frame,Material mat,DragonBoneData.SkinSlotDisplayData displayData,Transform slot,DragonBoneData.SlotData slotData){
 			SpriteFrame newFrame = (SpriteFrame)GameObject.Instantiate(frame);
 			newFrame.atlasMat = mat;
 			newFrame.CreateQuad();
@@ -359,11 +359,11 @@ namespace DragonBone
 			newFrame.transform.localScale = localSc;
 
 			Color c = Color.white;
-			if(displayData.color!=null){
-				c.a = displayData.color.aM+displayData.color.a0;
-				c.r = displayData.color.rM+displayData.color.r0;
-				c.g = displayData.color.gM+displayData.color.g0;
-				c.b = displayData.color.bM+displayData.color.b0;
+			if(slotData.color!=null){
+				c.a = slotData.color.aM+slotData.color.a0;
+				c.r = slotData.color.rM+slotData.color.r0;
+				c.g = slotData.color.gM+slotData.color.g0;
+				c.b = slotData.color.bM+slotData.color.b0;
 				newFrame.color = c;
 			}
 
@@ -371,12 +371,12 @@ namespace DragonBone
 				newFrame.transform.localRotation = Quaternion.Euler(0,0,displayData.transform.rotate);
 		}
 
-		static SpriteRenderer ShowUnitySprite(Material mat,DragonBoneData.SkinSlotDisplayData displayData,Transform slot,SpriteMetaData metaData){
+		static SpriteRenderer ShowUnitySprite(Material mat,DragonBoneData.SkinSlotDisplayData displayData,Transform slot,SpriteMetaData metaData,DragonBoneData.SlotData slotData){
 			Sprite sprite = Sprite.Create((Texture2D)mat.mainTexture,metaData.rect,metaData.pivot,100f,0,SpriteMeshType.Tight);
-			return ShowUnitySpriteSingle(sprite,displayData,slot);
+			return ShowUnitySpriteSingle(sprite,displayData,slot,slotData);
 		}
 
-		static SpriteRenderer ShowUnitySpriteSingle( Sprite sprite,DragonBoneData.SkinSlotDisplayData displayData,Transform slot)
+		static SpriteRenderer ShowUnitySpriteSingle( Sprite sprite,DragonBoneData.SkinSlotDisplayData displayData,Transform slot,DragonBoneData.SlotData slotData)
 		{
 			GameObject go = new GameObject(displayData.textureName);
 			SpriteRenderer renderer = go.AddComponent<SpriteRenderer>();
@@ -394,11 +394,11 @@ namespace DragonBone
 			go.transform.localScale = localSc;
 
 			Color c = Color.white;
-			if(displayData.color!=null){
-				c.a = displayData.color.aM+displayData.color.a0;
-				c.r = displayData.color.rM+displayData.color.r0;
-				c.g = displayData.color.gM+displayData.color.g0;
-				c.b = displayData.color.bM+displayData.color.b0;
+			if(slotData.color!=null){
+				c.a = slotData.color.aM+slotData.color.a0;
+				c.r = slotData.color.rM+slotData.color.r0;
+				c.g = slotData.color.gM+slotData.color.g0;
+				c.b = slotData.color.bM+slotData.color.b0;
 				renderer.color = c;
 			}
 
@@ -407,7 +407,7 @@ namespace DragonBone
 			return renderer;
 		}
 
-		static void ShowSpriteMesh(Rect rect,Material mat,DragonBoneData.SkinSlotDisplayData displayData,Transform slot,ArmatureEditor armatureEditor){
+		static void ShowSpriteMesh(Rect rect,Material mat,DragonBoneData.SkinSlotDisplayData displayData,Transform slot,ArmatureEditor armatureEditor,DragonBoneData.SlotData slotData){
 	
 			GameObject go = new GameObject(displayData.textureName);
 			SpriteMesh sm = go.AddComponent<SpriteMesh>();
@@ -559,11 +559,11 @@ namespace DragonBone
 			sm.transform.localScale = localSc;
 
 			Color c = Color.white;
-			if(displayData.color!=null){
-				c.a = displayData.color.aM+displayData.color.a0;
-				c.r = displayData.color.rM+displayData.color.r0;
-				c.g = displayData.color.gM+displayData.color.g0;
-				c.b = displayData.color.bM+displayData.color.b0;
+			if(slotData.color!=null){
+				c.a = slotData.color.aM+slotData.color.a0;
+				c.r = slotData.color.rM+slotData.color.r0;
+				c.g = slotData.color.gM+slotData.color.g0;
+				c.b = slotData.color.bM+slotData.color.b0;
 				sm.color = c;
 			}
 			sm.transform.localRotation = Quaternion.Euler(0,0,tranform.rotate);
