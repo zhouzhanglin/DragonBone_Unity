@@ -306,7 +306,7 @@ namespace DragonBone
 										AnimationCurve vertex_xcurve = vertex_xcurves[r];
 										AnimationCurve vertex_ycurve = vertex_ycurves[r];
 										Transform vCtr = ffdNode.GetChild(r);//顶点控制点
-										if(r>=frameData.offset && frameData.vertices!=null && r-frameData.offset<frameData.vertices.Length){
+										if(r>=frameData.offset && r-frameData.offset<frameData.vertices.Length){
 											Keyframe kfx = KeyframeUtil.GetNew(during,vCtr.localPosition.x+frameData.vertices[r-frameData.offset].x,tanModeL,tanModeR);
 											vertex_xcurve.AddKey(kfx);
 											Keyframe kfy = KeyframeUtil.GetNew(during,vCtr.localPosition.y+frameData.vertices[r-frameData.offset].y,tanModeL,tanModeR);
@@ -342,16 +342,16 @@ namespace DragonBone
 					during+= frameData.duration*perKeyTime;
 				}
 
-				OptimizesCurve(xcurve);
-				OptimizesCurve(ycurve);
-				OptimizesCurve(zcurve);
-				OptimizesCurve(sxcurve);
-				OptimizesCurve(sycurve);
-				OptimizesCurve(color_rcurve);
-				OptimizesCurve(color_gcurve);
-				OptimizesCurve(color_bcurve);
-				OptimizesCurve(color_acurve);
-				OptimizesCurve(rotatecurve);
+				CurveExtension.OptimizesCurve(xcurve);
+				CurveExtension.OptimizesCurve(ycurve);
+				CurveExtension.OptimizesCurve(zcurve);
+				CurveExtension.OptimizesCurve(sxcurve);
+				CurveExtension.OptimizesCurve(sycurve);
+				CurveExtension.OptimizesCurve(color_rcurve);
+				CurveExtension.OptimizesCurve(color_gcurve);
+				CurveExtension.OptimizesCurve(color_bcurve);
+				CurveExtension.OptimizesCurve(color_acurve);
+				CurveExtension.OptimizesCurve(rotatecurve);
 
 
 				string path = GetNodeRelativePath(armatureEditor,node) ;
@@ -362,15 +362,10 @@ namespace DragonBone
 				if(localPosFlag){
 					if(isHaveCurve) SetCustomCurveTangents(xcurve,animSubData.frameDatas);
 					CurveExtension.UpdateAllLinearTangents(xcurve);
-					AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve(path,typeof(Transform),"m_LocalPosition.x" ),xcurve);
+					AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( path, typeof( Transform ), "m_LocalPosition.x" ), xcurve );
 					if(isHaveCurve) SetCustomCurveTangents(ycurve,animSubData.frameDatas);
 					CurveExtension.UpdateAllLinearTangents(ycurve);
-					AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve(path,typeof(Transform),"m_LocalPosition.y" ),ycurve);
-
-					if(!boneOrSlot && !isffd){
-						//no order animation
-//						AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve(path,typeof(Transform),"m_LocalPosition.z" ),zcurve);
-					}
+					AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( path, typeof( Transform ), "m_LocalPosition.y" ), ycurve );
 				}
 
 				bool localSc = false;
@@ -379,67 +374,36 @@ namespace DragonBone
 				if(localSc){
 					if(isHaveCurve) SetCustomCurveTangents(sxcurve,animSubData.frameDatas);
 					CurveExtension.UpdateAllLinearTangents(sxcurve);
-					clip.SetCurve(path,typeof(Transform),"localScale.x",sxcurve);
+					AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( path, typeof( Transform ), "m_LocalScale.x" ), sxcurve );
 					if(isHaveCurve) SetCustomCurveTangents(sycurve,animSubData.frameDatas);
 					CurveExtension.UpdateAllLinearTangents(sycurve);
-					clip.SetCurve(path,typeof(Transform),"localScale.y",sycurve);
+					AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( path, typeof( Transform ), "m_LocalScale.y" ), sycurve );
 				}
 
 				if(rotatecurve.keys !=null && rotatecurve.keys.Length>0 && CheckCurveValid(rotatecurve,defaultTransformData.rotate)){
-					if(rotatecurve.length>1){
-						for(int f=1;f<rotatecurve.length;++f){
-							float prev = rotatecurve.keys[f-1].value;
-							float curr = rotatecurve.keys[f].value;
-							while ((curr - prev) > 180 ){
-								curr -= 360;
-							}
-							while ((curr - prev) < -180){
-								curr += 360;
-							}
-							if (rotatecurve.keys[f].value != curr){
-								rotatecurve.MoveKey(f, new Keyframe(rotatecurve.keys[f].time , curr));
-							}
-						}
-					}
+					CurveExtension.ClampCurveRotate360(rotatecurve);
 					if(isHaveCurve) SetCustomCurveTangents(rotatecurve,animSubData.frameDatas);
 					CurveExtension.UpdateAllLinearTangents(rotatecurve);
 					clip.SetCurve(path,typeof(Transform),"localEulerAngles.z",rotatecurve);
 				}
 
 				if(!boneOrSlot){
+					if(defaultColorData==null) defaultColorData = new DragonBoneData.ColorData();
+
+					float da = defaultColorData.aM+defaultColorData.a0;
+					float dr = defaultColorData.rM+defaultColorData.r0;
+					float dg = defaultColorData.gM+defaultColorData.g0;
+					float db = defaultColorData.bM+defaultColorData.b0;
 					if(armatureEditor.useUnitySprite)
 					{
 						SpriteRenderer[] sprites = node.GetComponentsInChildren<SpriteRenderer>();
 						if(sprites!=null){
 							for(int z=0;z<sprites.Length;++z){
 								string childPath = path+"/"+sprites[z].name;
-								if(color_rcurve.keys !=null&& color_rcurve.keys.Length>0&& CheckCurveValid(color_rcurve,defaultColorData.rM+defaultColorData.r0)) 
-								{
-									if(isHaveCurve) SetCustomCurveTangents(color_rcurve,animSubData.frameDatas);
-									CurveExtension.UpdateAllLinearTangents(color_rcurve);
-									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteRenderer ), "m_Color.r" ), color_rcurve );
-								}
-
-								if(color_gcurve.keys !=null&& color_gcurve.keys.Length>0&& CheckCurveValid(color_gcurve,defaultColorData.gM+defaultColorData.g0)) 
-								{
-									if(isHaveCurve) SetCustomCurveTangents(color_gcurve,animSubData.frameDatas);
-									CurveExtension.UpdateAllLinearTangents(color_gcurve);
-									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteRenderer ), "m_Color.g" ), color_gcurve );
-								}
-
-								if(color_bcurve.keys !=null&& color_bcurve.keys.Length>0&& CheckCurveValid(color_bcurve,defaultColorData.bM+defaultColorData.b0)) 
-								{
-									if(isHaveCurve) SetCustomCurveTangents(color_bcurve,animSubData.frameDatas);
-									CurveExtension.UpdateAllLinearTangents(color_bcurve);
-									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteRenderer ), "m_Color.b" ), color_bcurve );
-								}
-
-								if(color_acurve.keys !=null&& color_acurve.keys.Length>0&& CheckCurveValid(color_acurve,defaultColorData.aM+defaultColorData.a0)) 
-								{
-									if(isHaveCurve) SetCustomCurveTangents(color_acurve,animSubData.frameDatas);
-									CurveExtension.UpdateAllLinearTangents(color_acurve);
-									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteRenderer ), "m_Color.a" ), color_acurve );
-								}
+								SetColorCurve<SpriteRenderer>(childPath,clip,color_rcurve,"m_Color.r",isHaveCurve,dr,animSubData.frameDatas);
+								SetColorCurve<SpriteRenderer>(childPath,clip,color_gcurve,"m_Color.g",isHaveCurve,dg,animSubData.frameDatas);
+								SetColorCurve<SpriteRenderer>(childPath,clip,color_bcurve,"m_Color.b",isHaveCurve,db,animSubData.frameDatas);
+								SetColorCurve<SpriteRenderer>(childPath,clip,color_acurve,"m_Color.a",isHaveCurve,da,animSubData.frameDatas);
 							}
 						}
 					}
@@ -448,40 +412,12 @@ namespace DragonBone
 						SpriteFrame[] sprites = node.GetComponentsInChildren<SpriteFrame>();
 						if(sprites!=null){
 							for(int z=0;z<sprites.Length;++z){
-								bool haveAnim = false;
 								string childPath = path+"/"+sprites[z].name;
-								if(color_rcurve.keys !=null&& color_rcurve.keys.Length>0&& CheckCurveValid(color_rcurve,defaultColorData.rM+defaultColorData.r0)) 
-								{
-									if(isHaveCurve) SetCustomCurveTangents(color_rcurve,animSubData.frameDatas);
-									CurveExtension.UpdateAllLinearTangents(color_rcurve);
-									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteFrame ), "m_color.r" ), color_rcurve );
-									haveAnim = true;
-								}
-
-								if(color_gcurve.keys !=null&& color_gcurve.keys.Length>0&& CheckCurveValid(color_gcurve,defaultColorData.gM+defaultColorData.g0)) 
-								{
-									if(isHaveCurve) SetCustomCurveTangents(color_gcurve,animSubData.frameDatas);
-									CurveExtension.UpdateAllLinearTangents(color_gcurve);
-									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteFrame ), "m_color.g" ), color_gcurve );
-									haveAnim = true;
-								}
-
-								if(color_bcurve.keys !=null&& color_bcurve.keys.Length>0&& CheckCurveValid(color_bcurve,defaultColorData.bM+defaultColorData.b0)) 
-								{
-									if(isHaveCurve) SetCustomCurveTangents(color_bcurve,animSubData.frameDatas);
-									CurveExtension.UpdateAllLinearTangents(color_bcurve);
-									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteFrame ), "m_color.b" ), color_bcurve );
-									haveAnim = true;
-								}
-
-								if(color_acurve.keys !=null&& color_acurve.keys.Length>0&& CheckCurveValid(color_acurve,defaultColorData.aM+defaultColorData.a0)) 
-								{
-									if(isHaveCurve) SetCustomCurveTangents(color_acurve,animSubData.frameDatas);
-									CurveExtension.UpdateAllLinearTangents(color_acurve);
-									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteFrame ), "m_color.a" ), color_acurve );
-									haveAnim = true;
-								}
-								if(haveAnim){
+								bool anim_r = SetColorCurve<SpriteFrame>(childPath,clip,color_rcurve,"m_color.r",isHaveCurve,dr,animSubData.frameDatas);
+								bool anim_g = SetColorCurve<SpriteFrame>(childPath,clip,color_gcurve,"m_color.g",isHaveCurve,dg,animSubData.frameDatas);
+								bool anim_b = SetColorCurve<SpriteFrame>(childPath,clip,color_bcurve,"m_color.b",isHaveCurve,db,animSubData.frameDatas);
+								bool anim_a = SetColorCurve<SpriteFrame>(childPath,clip,color_acurve,"m_color.a",isHaveCurve,da,animSubData.frameDatas);
+								if(anim_r||anim_g||anim_b||anim_a){
 									changedSpriteFramesKV[childPath] = sprites[z];
 								}
 							}
@@ -491,39 +427,11 @@ namespace DragonBone
 						if(spriteMeshs!=null){
 							for(int z=0;z<spriteMeshs.Length;++z){
 								string childPath = path+"/"+spriteMeshs[z].name;
-								bool haveAnim = false;
-								if(color_rcurve.keys !=null&& color_rcurve.keys.Length>0&& CheckCurveValid(color_rcurve,defaultColorData.rM+defaultColorData.r0)) 
-								{
-									if(isHaveCurve) SetCustomCurveTangents(color_rcurve,animSubData.frameDatas);
-									CurveExtension.UpdateAllLinearTangents(color_rcurve);
-									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteMesh ), "m_color.r" ), color_rcurve );
-									haveAnim = true;
-								}
-
-								if(color_gcurve.keys !=null&& color_gcurve.keys.Length>0&& CheckCurveValid(color_gcurve,defaultColorData.gM+defaultColorData.g0)) 
-								{
-									if(isHaveCurve) SetCustomCurveTangents(color_gcurve,animSubData.frameDatas);
-									CurveExtension.UpdateAllLinearTangents(color_gcurve);
-									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteMesh ), "m_color.g" ), color_gcurve );
-									haveAnim = true;
-								}
-
-								if(color_bcurve.keys !=null&& color_bcurve.keys.Length>0&& CheckCurveValid(color_bcurve,defaultColorData.bM+defaultColorData.b0)) 
-								{
-									if(isHaveCurve) SetCustomCurveTangents(color_bcurve,animSubData.frameDatas);
-									CurveExtension.UpdateAllLinearTangents(color_bcurve);
-									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteMesh ), "m_color.b" ), color_bcurve );
-									haveAnim = true;
-								}
-
-								if(color_acurve.keys !=null&& color_acurve.keys.Length>0&& CheckCurveValid(color_acurve,defaultColorData.aM+defaultColorData.a0)) 
-								{
-									if(isHaveCurve) SetCustomCurveTangents(color_acurve,animSubData.frameDatas);
-									CurveExtension.UpdateAllLinearTangents(color_acurve);
-									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( childPath, typeof( SpriteMesh ), "m_color.a" ), color_acurve );
-									haveAnim = true;
-								}
-								if(haveAnim){
+								bool anim_r = SetColorCurve<SpriteMesh>(childPath,clip,color_rcurve,"m_color.r",isHaveCurve,da,animSubData.frameDatas);
+								bool anim_g = SetColorCurve<SpriteMesh>(childPath,clip,color_gcurve,"m_color.g",isHaveCurve,dg,animSubData.frameDatas);
+								bool anim_b = SetColorCurve<SpriteMesh>(childPath,clip,color_bcurve,"m_color.b",isHaveCurve,db,animSubData.frameDatas);
+								bool anim_a = SetColorCurve<SpriteMesh>(childPath,clip,color_acurve,"m_color.a",isHaveCurve,da,animSubData.frameDatas);
+								if(anim_r||anim_g||anim_b||anim_a){
 									changedSpriteMeshsKV[childPath] = spriteMeshs[z];
 								}
 							}
@@ -555,8 +463,8 @@ namespace DragonBone
 									Transform v = ffdNode.GetChild(r);
 									string ctrlPath = path+"/"+ffdNode.name+"/"+v.name;
 
-									OptimizesCurve(vertex_xcurve);
-									OptimizesCurve(vertex_ycurve);
+									CurveExtension.OptimizesCurve(vertex_xcurve);
+									CurveExtension.OptimizesCurve(vertex_ycurve);
 
 									bool vcurveFlag = false;
 									if(vertex_xcurve.keys !=null&& vertex_xcurve.keys.Length>0&& CheckCurveValid(vertex_xcurve,v.localPosition.x)) vcurveFlag = true;
@@ -576,6 +484,17 @@ namespace DragonBone
 					}
 				}
 			}
+		}
+
+		static bool SetColorCurve<T>(string path,AnimationClip clip, AnimationCurve curve,string prop, bool isHaveCurve,float defaultVal,DragonBoneData.AnimFrameData[] timelines){
+			if(curve.keys !=null&& curve.keys.Length>0&& CheckCurveValid(curve,defaultVal)) 
+			{
+				if(isHaveCurve) SetCustomCurveTangents(curve,timelines);
+				CurveExtension.UpdateAllLinearTangents(curve);
+				AnimationUtility.SetEditorCurve(clip,EditorCurveBinding.FloatCurve(path,typeof(T),prop),curve);
+				return true;
+			}
+			return false;
 		}
 
 		static void SetDragonBoneArmature(ArmatureEditor armature){
@@ -689,138 +608,16 @@ namespace DragonBone
 			return result.Substring(0,result.Length-1);
 		}
 
-
-
-
-
-
-		#region custom curve
-
-		public static void SetCustomCurveTangents(AnimationCurve curve, DragonBoneData.AnimFrameData[] frameDatas){
+		static void SetCustomCurveTangents(AnimationCurve curve, DragonBoneData.AnimFrameData[] frameDatas){
 			int len=curve.keys.Length;
 			for (int i = 0; i < len; i++) {
 				int nextI = i + 1;
 				if (nextI < curve.keys.Length){
 					if (frameDatas[i].curve != null ){ 
-						SetCustomTangents(curve, i, nextI, frameDatas[i].curve);
+						CurveExtension.SetCustomTangents(curve, i, nextI, frameDatas[i].curve);
 					}
 				}
 			}
 		}
-
-		// p0, p3 - start, end points
-		// p1, p2 - conrol points
-		// t - value on x [0,1]
-		static Vector2 GetBezierPoint(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3, float t){
-			float y = (1 - t) * (1 - t) * (1 - t) * p0.y +
-				3 * t * (1 - t) * (1 - t) * p1.y +
-				3 * t * t * (1 - t) * p2.y +
-				t * t * t * p3.y;
-			return new Vector2(p0.x + t * (p3.x - p0.x) ,y);
-		}
-
-		// a - start point
-		// b - on t= 1/3
-		// c - on t = 2/3
-		// d - end point
-		// c1,c2 control points of bezier.
-		static void CalcControlPoints(Vector2 a, Vector2 b, Vector2 c, Vector2 d, out Vector2 c1, out Vector2 c2){
-			c1 = (-5 * a + 18 * b - 9 * c + 2 * d)/6;
-			c2 = ( 2 * a - 9 * b + 18 * c - 5 * d)/6;	
-		}
-
-		static void SetCustomTangents(AnimationCurve curve, int i, int nextI, float[] tangentArray){
-			float diffValue = curve[nextI].value - curve[i].value;
-			float diffTime = curve[nextI].time - curve[i].time;
-			if (diffValue == 0)
-				return; 
-
-
-			float cx1 = tangentArray[0];
-			float cy1 = tangentArray[1];
-			float cx2 = tangentArray[2];
-			float cy2 = tangentArray[3];
-
-			Vector2 p0     = new Vector2(0  , curve[i].value);
-			Vector2 p3     = new Vector2(diffTime  , curve[nextI].value);
-			Vector2 cOrig1 = new Vector2(diffTime * cx1, curve[i].value);
-			cOrig1.y += diffValue > 0 ? diffValue * cy1 : -1.0f * Mathf.Abs(diffValue * cy1);
-
-			Vector2 cOrig2 = new Vector2(diffTime * cx2, curve[i].value);
-			cOrig2.y += diffValue > 0 ? diffValue * cy2 : -1.0f * Mathf.Abs(diffValue * cy2);
-
-			Vector2 p1 = GetBezierPoint(p0, cOrig1, cOrig2, p3, 1.0f / 3.0f);
-			Vector2 p2 = GetBezierPoint(p0, cOrig1, cOrig2, p3, 2.0f / 3.0f);
-
-
-			Vector2 c1tg, c2tg, c1, c2;
-			CalcControlPoints(p0,p1,p2,p3, out c1, out c2);
-
-			c1tg = c1 - p0;
-			c2tg = c2 - p3;
-
-			float outTangent = c1tg.y / c1tg.x;
-			float inTangent  = c2tg.y / c2tg.x;
-
-
-			object thisKeyframeBoxed = curve[i];
-			object nextKeyframeBoxed = curve[nextI];
-
-
-			if (!KeyframeUtil.isKeyBroken(thisKeyframeBoxed))
-				KeyframeUtil.SetKeyBroken(thisKeyframeBoxed, true);
-			
-			TangentMode mode = TangentMode.Editable;
-			if(cx1==0f&&cy1==0f) mode=TangentMode.Linear;
-			KeyframeUtil.SetKeyTangentMode(thisKeyframeBoxed, 1, mode);
-
-			if (!KeyframeUtil.isKeyBroken(nextKeyframeBoxed))
-				KeyframeUtil.SetKeyBroken(nextKeyframeBoxed, true);	
-
-			mode = TangentMode.Editable;
-			if(cx2==1f&&cy2==1f) mode=TangentMode.Linear;
-			KeyframeUtil.SetKeyTangentMode(nextKeyframeBoxed, 0, mode);
-
-			Keyframe thisKeyframe = (Keyframe)thisKeyframeBoxed;
-			Keyframe nextKeyframe = (Keyframe)nextKeyframeBoxed;
-
-			thisKeyframe.outTangent = outTangent;
-			nextKeyframe.inTangent  = inTangent;
-
-			curve.MoveKey(i, 	 thisKeyframe);
-			curve.MoveKey(nextI, nextKeyframe);
-
-			//* test method
-			float startTime = thisKeyframe.time;
-
-			for (float j=0; j < 25f; j++) {
-				float t  = j/25.0f;
-				curve.Evaluate(startTime + diffTime * t);			
-			}
-
-		}
-
-		public static bool NearlyEqual(float a, float b, float epsilon)
-		{
-			float absA = Mathf.Abs(a);
-			float absB = Mathf.Abs(b);
-			float diff = Mathf.Abs(a - b);
-
-			if (a == b)
-			{ // shortcut, handles infinities
-				return true;
-			} 
-			else if (a == 0 || b == 0 || diff < System.Double.MinValue) 
-			{
-				// a or b is zero or both are extremely close to it
-				// relative error is less meaningful here
-				return diff < (epsilon * System.Double.MinValue);
-			}
-			else
-			{ // use relative error
-				return diff / (absA + absB) < epsilon;
-			}
-		}
-		#endregion
 	}
 }
