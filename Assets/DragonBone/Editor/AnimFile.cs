@@ -523,7 +523,8 @@ namespace DragonBone
 		{
 			if(frameDatas==null || frameDatas.Length==0) return;
 
-			armatureEditor.armature.gameObject.AddComponent<DragonBoneEvent>();
+			if(armatureEditor.armature.gameObject.GetComponent<DragonBoneEvent>()==null)
+				armatureEditor.armature.gameObject.AddComponent<DragonBoneEvent>();
 			float during = 0;
 			float perKeyTime = 1f/armatureEditor.armatureData.frameRate;
 
