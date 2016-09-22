@@ -1,5 +1,6 @@
 #DragonBone_Unity
-直接将DragonBone数据转换成Unity自带的动画，支持骨骼动画，网格动画，蒙皮动画, IK动画。需要Unity5.3.x以上
+Dragon Bone是一款免费的动画制作工具，下载地址[http://dragonbones.com](http://dragonbones.com)<br/>
+此插件是直接将DragonBone数据转换成Unity自带的动画，支持骨骼动画，网格动画，蒙皮动画, IK动画。需要Unity5.3.x以上
 #使用方法
 1.(手动)菜单栏 -> DragonBone -> DragonBone Panel(All Function) -> 选择动画文件,动画贴图集,贴图集配置 -----------> 此面板包含了本项目所有功能<br/> 
 2.(自动)选中动画文件夹->打开Unity菜单栏 -> DragonBone -> DragonBone(SpriteFrame)/(UnitySprite)<br/>     
