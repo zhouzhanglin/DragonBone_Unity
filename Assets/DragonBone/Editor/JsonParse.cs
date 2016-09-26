@@ -28,12 +28,13 @@ namespace DragonBone
 		}
 
 
+		public static int armtureLen = 0;
 		public static void ParseAnimJsonData(ArmatureEditor armatureEditor)
 		{
 			SimpleJSON.JSONClass json=SimpleJSON.JSON.Parse(armatureEditor.animTextAsset.text.Replace("null","\"null\"")).AsObject;
 			SimpleJSON.JSONArray armtureArr = json["armature"].AsArray;
-
-			for(int i=0;i<armtureArr.Count;++i)
+			armtureLen = armtureArr.Count;
+			for(int i=0;i<armtureLen;++i)
 			{
 				armatureEditor.armatureData = new DragonBoneData.ArmatureData();
 				GameObject go = new GameObject("DragonBone");

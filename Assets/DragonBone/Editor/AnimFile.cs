@@ -45,7 +45,7 @@ namespace DragonBone
 				{
 					DragonBoneData.AnimationData animationData = armatureEditor.armatureData.animDatas[i];
 					string clipPath = path+ animationData.name+".anim";
-					if(len>1) clipPath = path+armatureEditor.armature.name+"_"+ animationData.name+".anim";
+					if(JsonParse.armtureLen>1) clipPath = path+armatureEditor.armature.name+"_"+ animationData.name+".anim";
 					AnimationClip clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
 					if(clip==null){
 						clip = new AnimationClip();
