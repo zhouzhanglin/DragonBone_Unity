@@ -24,7 +24,7 @@ namespace DragonBone
 			changedSpriteMeshsKV =  new Dictionary<string, SpriteMesh>();
 
 			string path = AssetDatabase.GetAssetPath(armatureEditor.animTextAsset);
-			path = path.Substring(0,path.LastIndexOf('/'))+"/Anims";
+			path = path.Substring(0,path.LastIndexOf('/'))+"/"+armatureEditor.armature.name+"_Anims";
 			if(!AssetDatabase.IsValidFolder(path)){
 				Directory.CreateDirectory(path);
 			}
@@ -45,7 +45,6 @@ namespace DragonBone
 				{
 					DragonBoneData.AnimationData animationData = armatureEditor.armatureData.animDatas[i];
 					string clipPath = path+ animationData.name+".anim";
-					if(JsonParse.armtureLen>1) clipPath = path+armatureEditor.armature.name+"_"+ animationData.name+".anim";
 					AnimationClip clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
 					if(clip==null){
 						clip = new AnimationClip();

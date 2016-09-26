@@ -28,13 +28,11 @@ namespace DragonBone
 		}
 
 
-		public static int armtureLen = 0;
 		public static void ParseAnimJsonData(ArmatureEditor armatureEditor)
 		{
 			SimpleJSON.JSONClass json=SimpleJSON.JSON.Parse(armatureEditor.animTextAsset.text.Replace("null","\"null\"")).AsObject;
 			SimpleJSON.JSONArray armtureArr = json["armature"].AsArray;
-			armtureLen = armtureArr.Count;
-			for(int i=0;i<armtureLen;++i)
+			for(int i=0;i<armtureArr.Count;++i)
 			{
 				armatureEditor.armatureData = new DragonBoneData.ArmatureData();
 				GameObject go = new GameObject("DragonBone");
@@ -73,7 +71,7 @@ namespace DragonBone
 					SimpleJSON.JSONClass boneObj = bones[i].AsObject;
 					DragonBoneData.BoneData boneData = new DragonBoneData.BoneData();
 					if(boneObj.ContainKey("length"))  boneData.length = boneObj["length"].AsFloat;
-					if(boneObj.ContainKey("name"))  boneData.name = boneObj["name"].ToString();
+					if(boneObj.ContainKey("name"))  boneData.name = boneObj["name"].ToString().Trim();
 					if(boneObj.ContainKey("parent"))  boneData.parent = boneObj["parent"].ToString();
 					if(boneObj.ContainKey("inheritRotation")) boneData.inheritRotation = boneObj["inheritRotation"].AsInt==1?true:false;
 					if(boneObj.ContainKey("inheritScale")) boneData.inheritScale = boneObj["inheritScale"].AsInt==1?true:false;
@@ -169,7 +167,7 @@ namespace DragonBone
 				for(int i=0;i<anims.Count;++i){
 					SimpleJSON.JSONClass animObj = anims[i].AsObject;
 					DragonBoneData.AnimationData animData=new DragonBoneData.AnimationData();
-					if(animObj.ContainKey("name"))  animData.name = animObj["name"].ToString();
+					if(animObj.ContainKey("name"))  animData.name = animObj["name"].ToString().Trim();
 					if(animObj.ContainKey("playTimes"))  animData.playTimes = animObj["playTimes"].AsInt;
 					if(animObj.ContainKey("duration"))  animData.duration = animObj["duration"].AsInt;
 					if(animData.duration==0) animData.duration =1;
