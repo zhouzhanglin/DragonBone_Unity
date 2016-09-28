@@ -34,7 +34,7 @@ namespace DragonBone
 						SpriteMesh sm = render.GetComponent<SpriteMesh>();
 						if(sm){
 							sm.sortingLayerName = sortingLayerName;
-							sm.soringOrder = sortingOrder;
+							sm.sortingOrder = sortingOrder;
 							EditorUtility.SetDirty(sm);
 						}
 					}

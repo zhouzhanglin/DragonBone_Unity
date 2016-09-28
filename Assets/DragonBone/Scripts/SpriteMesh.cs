@@ -83,10 +83,10 @@ namespace DragonBone
 		}
 
 		[SerializeField]
-		private int m_soringOrder = 0;
-		public int soringOrder{
-			get { return m_soringOrder;}
-			set {	m_soringOrder=value;
+		private int m_sortingOrder = 0;
+		public int sortingOrder{
+			get { return m_sortingOrder;}
+			set {	m_sortingOrder=value;
 				if(m_createdMesh)	UpdateSorting();
 			}
 		}
@@ -183,7 +183,7 @@ namespace DragonBone
 		public void UpdateSorting(){
 			if(m_render){
 				m_render.sortingLayerName = m_sortingLayerName;
-				m_render.sortingOrder = m_soringOrder;
+				m_render.sortingOrder = m_sortingOrder;
 			}
 		}
 
