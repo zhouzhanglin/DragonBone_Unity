@@ -317,6 +317,18 @@ namespace DragonBone
 							textureImporter.spriteImportMode = SpriteImportMode.Multiple;
 							textureImporter.spritePixelsPerUnit = 100;
 							AssetDatabase.ImportAsset(textureAtlasPath, ImportAssetOptions.ForceUpdate);
+							Object[] savedSprites = AssetDatabase.LoadAllAssetsAtPath(textureAtlasPath);
+							foreach(Object obj in savedSprites){
+								Sprite objSprite = obj as Sprite;
+								if(objSprite){
+									len = sprites.Count;
+									for(int i=0;i<len;++i){
+										if(sprites[i].name.Equals(objSprite.name)){
+											sprites[i].sprite = objSprite;
+										}
+									}
+								}
+							}
 						}
 					}
 					if(atlasMat!=null){
