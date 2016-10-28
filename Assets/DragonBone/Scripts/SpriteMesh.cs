@@ -65,7 +65,7 @@ namespace DragonBone
 		public Color color{
 			get { return __Color;}
 			set { 
-				if(!__Color.Equals(value)){
+				if(!__Color.Equals(value) || !m_color.Equals(value)){
 					m_color = value; 
 					__Color = value;
 					if(m_createdMesh)	UpdateVertexColor();
