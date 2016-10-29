@@ -419,21 +419,30 @@ namespace DragonBone
 
 						//ffd animation
 						//vertex offset
+						bool startFromY = false;
 						if(frameObj.ContainKey("offset")){
+							startFromY = frameObj["offset"].AsInt%2!=0;//从Y开始
 							frameData.offset = frameObj["offset"].AsInt/2;
 						}
 						if(frameObj.ContainKey("vertices")){ //local vertex
 							SimpleJSON.JSONArray verticesObj = frameObj["vertices"].AsArray;
-							frameData.vertices = new Vector2[verticesObj.Count/2];
 							int index=0;
-							for(int k=0;k<verticesObj.Count && k+1<verticesObj.Count;k+=2)
+							int k= 0;
+							if(startFromY) {
+								frameData.vertices = new Vector2[verticesObj.Count/2+1];
+								frameData.vertices[index]=new Vector2(0,-verticesObj[k].AsFloat*0.01f);
+								k = 1;
+								++index;
+							}else{
+								frameData.vertices = new Vector2[verticesObj.Count/2];
+							}
+							for(;k<verticesObj.Count && k+1<verticesObj.Count;k+=2)
 							{
 								frameData.vertices[index]=new Vector2(verticesObj[k].AsFloat*0.01f,-verticesObj[k+1].AsFloat*0.01f);
 								++index;
 							}
 							armatureEditor.ffdKV[subData.name] = true;
 						}
-
 						subData.frameDatas[j] = frameData;
 					}
 				}
