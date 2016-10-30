@@ -68,6 +68,71 @@ namespace DragonBone
 		static void CreateWizard () {
 			ArmatureEditor editor = ScriptableWizard.DisplayWizard<ArmatureEditor>("Create DragonBone", "Create");
 			editor.minSize = new Vector2(200f,400f);
+
+			if(Selection.activeObject is DefaultAsset)
+			{
+				string dirPath = AssetDatabase.GetAssetOrScenePath(Selection.activeObject);
+				if(Directory.Exists(dirPath)){
+					string animJsonPath=null;
+					Dictionary<string,string> texturePathKV = new Dictionary<string, string>();
+					Dictionary<string,string> textureJsonPathKV = new Dictionary<string, string>();
+					foreach (string path in Directory.GetFiles(dirPath))
+					{  
+						if(System.IO.Path.GetExtension(path) == ".json" && path.IndexOf("texture")>-1 && path.LastIndexOf(".meta")==-1){
+							int start = path.LastIndexOf("/")+1;
+							int end = path.LastIndexOf(".json");
+							textureJsonPathKV[path.Substring(start,end-start)] = path;
+							continue;
+						}
+						if(System.IO.Path.GetExtension(path) == ".png" && path.IndexOf("texture")>-1 && path.LastIndexOf(".meta")==-1){
+							int start = path.LastIndexOf("/")+1;
+							int end = path.LastIndexOf(".png");
+							texturePathKV[path.Substring(start,end-start)] = path;
+							continue;
+						}
+						if (path.IndexOf("texture.json")==-1 && System.IO.Path.GetExtension(path) == ".json" && path.LastIndexOf(".meta")==-1)  
+						{  
+							animJsonPath = path;
+						}
+					} 
+					if(!string.IsNullOrEmpty(animJsonPath) && texturePathKV.Count>0 && textureJsonPathKV.Count>0){
+						List<Atlas> atlasList = new List<Atlas>();
+						foreach(string name in texturePathKV.Keys){
+							if(textureJsonPathKV.ContainsKey(name)){
+								if(editor.altasTexture==null){
+									editor.altasTextAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(textureJsonPathKV[name]);
+									editor.altasTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePathKV[name]);
+								}else{
+									Atlas atlas = new Atlas();
+									atlas.atlasText = AssetDatabase.LoadAssetAtPath<TextAsset>(textureJsonPathKV[name]);
+									atlas.texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePathKV[name]);
+									atlasList.Add(atlas);
+								}
+							}
+						}
+						editor.otherTextures = atlasList.ToArray();
+						editor.animTextAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(animJsonPath);
+					}
+					else if(!string.IsNullOrEmpty(animJsonPath))
+					{
+						string spritesPath = null;
+						foreach (string path in Directory.GetDirectories(dirPath))  
+						{  
+							if(path.LastIndexOf("texture")>-1){
+								spritesPath = path;
+								break;
+							}
+						}
+						if(!string.IsNullOrEmpty(spritesPath)){
+							string[] paths = Directory.GetFiles(spritesPath);
+							if(paths.Length>0){
+								editor.isSingleSprite = true;
+								editor.animTextAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(animJsonPath);
+							}
+						}
+					}
+				}
+			}
 		}
 
 		[MenuItem("DragonBone/DragonBone (SpriteFrame)")]
