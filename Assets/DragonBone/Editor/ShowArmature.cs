@@ -539,7 +539,7 @@ namespace DragonBone
 						skinnedMesh.bones=bones;
 						skinnedMesh.sharedMesh.boneWeights = boneWeights.ToArray();
 						skinnedMesh.sharedMesh.bindposes = matrixArray;
-						skinnedMesh.rootBone = m_rootBone;
+						skinnedMesh.rootBone = slot;
 						sm.bindposes = matrixArray;
 						SpriteMesh.BoneWeightClass[] bwcs = new SpriteMesh.BoneWeightClass[boneWeights.Count];
 						for(int i=0;i<boneWeights.Count;++i){

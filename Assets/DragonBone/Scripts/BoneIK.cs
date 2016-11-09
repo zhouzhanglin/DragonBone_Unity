@@ -85,7 +85,8 @@ namespace DragonBone
 			
 			angle += parentRotation;
 
-			transform.rotation = Quaternion.Euler(0, 0, angle);
+			Vector3 temp = transform.localEulerAngles;
+			transform.rotation = Quaternion.Euler(temp.x,temp.y, angle);
 		}
 
 		public static float SignedAngle (Vector3 a, Vector3 b)
