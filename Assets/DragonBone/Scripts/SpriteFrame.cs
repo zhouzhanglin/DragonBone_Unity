@@ -17,6 +17,16 @@ namespace DragonBone
 			public string name;
 			public Rect rect;//Texture Size
 			public Rect frameSize;//Real Size
+			public bool isRotated = false;
+			//偏移
+			public Vector3 frameOffset{
+				get{
+					Vector3 v = Vector3.zero;
+					v.x = (rect.width-frameSize.width)*0.5f-frameSize.x;
+					v.y = (frameSize.height-rect.height)*0.5f+frameSize.y;
+					return v;
+				}
+			}
 		}
 
 		public TextAsset atlasText;
@@ -269,18 +279,31 @@ namespace DragonBone
 		}
 
 		public void UpdateVertex(){
+			float x = 0f;
+			float y = 0f;
+			float w = m_rect.width;
+			float h = m_rect.height;
+			if(m_frame!=null){
+				if(m_frame.isRotated){
+					w = m_rect.height;
+					h = m_rect.width;
+				}
+				Vector3 offset = m_frame.frameOffset*0.01f;
+				x = offset.x;
+				y = offset.y;
+			}
 			Vector3[] verts = m_mesh.vertices;
-			verts[0].x = 0;
-			verts[0].y = 0;
+			verts[0].x = x;
+			verts[0].y = y;
 
-			verts[1].x = 0;
-			verts[1].y = m_rect.height*0.01f ;
+			verts[1].x = x;
+			verts[1].y = y+h*0.01f ;
 
-			verts[2].x = m_rect.width*0.01f;
-			verts[2].y = m_rect.height*0.01f;
+			verts[2].x = x+w*0.01f;
+			verts[2].y = y+h*0.01f;
 
-			verts[3].x = m_rect.width*0.01f;
-			verts[3].y = 0;
+			verts[3].x = x+w*0.01f;
+			verts[3].y = y;
 
 			Vector3 pivot = new Vector3(m_pivot.x*m_rect.width*0.01f,m_pivot.y*m_rect.height*0.01f,0f);
 			for(int i=0;i<4;++i){
@@ -322,19 +345,18 @@ namespace DragonBone
 					rect.height = frameObj["height"].AsFloat*textureScale;
 					Rect frameSize=new Rect(0,0,rect.width,rect.height);
 					if(frameObj.ContainKey("frameX")){
-						frame.frameSize.width = frameObj["frameX"].AsFloat*textureScale;
+						frameSize.x = frameObj["frameX"].AsFloat*textureScale;
 					}
 					if(frameObj.ContainKey("frameY")){
-						frame.frameSize.width = frameObj["frameY"].AsFloat*textureScale;
+						frameSize.y = frameObj["frameY"].AsFloat*textureScale;
 					}
 					if(frameObj.ContainKey("frameWidth")){
-						frame.frameSize.width = frameObj["frameWidth"].AsFloat*textureScale;
+						frameSize.width = frameObj["frameWidth"].AsFloat*textureScale;
 					}
 					if(frameObj.ContainKey("frameHeight")){
-						frame.frameSize.width = frameObj["frameHeight"].AsFloat*textureScale;
+						frameSize.height = frameObj["frameHeight"].AsFloat*textureScale;
 					}
 					frame.rect = rect;
-					frameSize = new Rect(frameSize.x*0.01f,frameSize.y*0.01f,frameSize.width*0.01f,frameSize.height*0.01f);
 					frame.frameSize = frameSize;
 					frames[i] = frame;
 				}
