@@ -295,10 +295,11 @@ namespace DragonBone
 			ShowArmature.SetIKs(this);
 			AnimFile.CreateAnimFile(this);
 			DragonBoneArmature dba = _armature.GetComponent<DragonBoneArmature>();
-			if(dba && (dba.updateMeshs == null || dba.updateMeshs.Length==0) 
-				&& (dba.updateFrames==null || dba.updateFrames.Length==0)){
-				Object.DestroyImmediate(dba);
-			}
+
+//			if(dba && (dba.updateMeshs == null || dba.updateMeshs.Length==0) 
+//				&& (dba.updateFrames==null || dba.updateFrames.Length==0)){
+//				Object.DestroyImmediate(dba);
+//			}
 
 			Renderer[] renders = _armature.GetComponentsInChildren<Renderer>();
 			foreach(Renderer r in renders){
@@ -319,6 +320,17 @@ namespace DragonBone
 					sf.frames=new SpriteFrame.TextureFrame[]{tf};
 				}
 			}
+			dba.attachments = renders;
+
+			//set slots
+			Transform[] slots = new Transform[slotsKV.Count];
+			int j =0 ;
+			foreach(Transform slot in slotsKV.Values){
+				slots[j] = slot;
+				++j;
+			}
+			dba.slots = slots;
+
 			string path = AssetDatabase.GetAssetPath(animTextAsset);
 			path = path.Substring(0,path.LastIndexOf('/'))+"/"+_armature.name+".prefab";
 			GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
