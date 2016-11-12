@@ -10,7 +10,8 @@ namespace DragonBone
 
 		string[] sortingLayerNames;
 		int selectedOption;
-		bool flipX;
+		bool flipX,flipY;
+		float zspace;
 
 		void OnEnable(){
 			DragonBoneArmature armature = target as DragonBoneArmature;
@@ -18,6 +19,8 @@ namespace DragonBone
 			sortingLayerNames = GetSortingLayerNames();
 			selectedOption = GetSortingLayerIndex(armature.sortingLayerName);
 			flipX = armature.flipX;
+			flipY = armature.flipY;
+			zspace = armature.zSpace;
 		}
 
 		public override void OnInspectorGUI(){
@@ -38,7 +41,7 @@ namespace DragonBone
 				armature.sortingOrder = newSortingLayerOrder;
 				EditorUtility.SetDirty(armature);
 			}
-			if(GUILayout.Button("Update All Order",GUILayout.Height(24))){
+			if(GUILayout.Button("Update All Sorting Order",GUILayout.Height(20))){
 				foreach(Renderer render in armature.GetComponentsInChildren<Renderer>()){
 					render.sortingLayerName = armature.sortingLayerName;
 					render.sortingOrder = armature.sortingOrder;
@@ -47,7 +50,7 @@ namespace DragonBone
 					SpriteFrame sf = render.GetComponent<SpriteFrame>();
 					if(sf) {
 						sf.sortingLayerName = armature.sortingLayerName;
-						sf.soringOrder = armature.sortingOrder;
+						sf.sortingOrder = armature.sortingOrder;
 					}
 					else {
 						SpriteMesh sm = render.GetComponent<SpriteMesh>();
@@ -61,15 +64,27 @@ namespace DragonBone
 
 			serializedObject.Update();
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_FlipX"), true);
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_FlipY"), true);
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("zSpace"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("slots"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("updateFrames"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("updateMeshs"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("attachments"), true);
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("materials"), true);
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("textureFrames"), true);
 			serializedObject.ApplyModifiedProperties();
 
 			if(armature.flipX!=flipX){
 				armature.flipX = armature.flipX;
 				flipX = armature.flipX;
+			}
+			if(armature.flipY!=flipY){
+				armature.flipY = armature.flipY;
+				flipY = armature.flipY;
+			}
+			if(armature.zSpace!=zspace){
+				zspace = armature.zSpace;
+				armature.ResetSlotZOrder();
 			}
 		}
 

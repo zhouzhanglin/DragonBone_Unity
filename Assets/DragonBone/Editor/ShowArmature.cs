@@ -32,11 +32,18 @@ namespace DragonBone
 		public static void AddSlot(ArmatureEditor armatureEditor){
 			if(armatureEditor.armatureData.slotDatas!=null){
 				armatureEditor.slotsKV.Clear();
+				DragonBoneArmature armature = armatureEditor.armature.GetComponent<DragonBoneArmature>();
 				int len = armatureEditor.armatureData.slotDatas.Length;
 				for(int i=0;i<len;++i){
 					DragonBoneData.SlotData slotData = armatureEditor.armatureData.slotDatas[i];
 					GameObject go = new GameObject(slotData.name);
 					armatureEditor.slotsKV[slotData.name]=go.transform;
+
+					Slot slot = go.AddComponent<Slot>();
+					slot.zOrder = i;
+					slot.armature = armature;
+					slot.blendMode = slot.ConvertBlendMode( slotData.blendMode.ToLower());
+					armatureEditor.slots.Add(slot);
 				}
 			}
 		}
@@ -124,8 +131,9 @@ namespace DragonBone
 		}
 		public static void ShowSkins(ArmatureEditor armatureEditor){
 			if(armatureEditor.armatureData.skinDatas!=null && armatureEditor.armatureData.skinDatas.Length>0){
-
+				DragonBoneArmature armature= armatureEditor.armature.GetComponent<DragonBoneArmature>();
 				Dictionary<Texture2D,Material> matKV = new Dictionary<Texture2D, Material>();
+				List<Material> mats = new List<Material>();
 				//创建贴图集的材质
 				Material atlasMat = null;
 				if(armatureEditor.altasTexture){
@@ -141,6 +149,7 @@ namespace DragonBone
 					mat.mainTexture = armatureEditor.altasTexture;
 					matKV[armatureEditor.altasTexture] = mat;
 					atlasMat=mat;
+					mats.Add(mat);
 				}
 
 				if(armatureEditor.otherTextures!=null && armatureEditor.otherTextures.Length>0){
@@ -157,11 +166,13 @@ namespace DragonBone
 						}
 						mat.mainTexture = atlas.texture;
 						matKV[atlas.texture] = mat;
+						mats.Add(mat);
 					}
 				}
 
 				//create Frames
 				Dictionary<Texture2D,SpriteFrame> frameKV = new Dictionary<Texture2D, SpriteFrame>();
+				List<TextureFrame> tfs = new List<TextureFrame>();
 
 				SpriteFrame frame = null;
 				if(armatureEditor.altasTextAsset!=null){
@@ -173,6 +184,7 @@ namespace DragonBone
 					sf.CreateQuad();
 					frameKV[armatureEditor.altasTexture] = sf;
 					frame = sf;
+					tfs.AddRange(frame.frames);
 				}
 				if(armatureEditor.otherTextures!=null && armatureEditor.otherTextures.Length>0)
 				{
@@ -185,6 +197,7 @@ namespace DragonBone
 						sf.ParseAtlasText();
 						sf.CreateQuad();
 						frameKV[atlas.texture] = sf;
+						tfs.AddRange(sf.frames);
 					}
 				}
 
@@ -247,11 +260,14 @@ namespace DragonBone
 								}
 								else if(displayData.type=="mesh")
 								{
-									Rect rect = new Rect();
+									TextureFrame textureFrame = new TextureFrame();
 									if(armatureEditor.isSingleSprite)
 									{
 										Sprite sprite = armatureEditor.spriteKV[displayData.textureName];
-										rect = sprite.rect;
+										textureFrame.name = displayData.textureName;
+										textureFrame.frameSize = sprite.rect;
+										textureFrame.rect = sprite.rect;
+										textureFrame.atlasTextureSize = new Vector2(sprite.rect.width,sprite.rect.height);
 
 										string path = AssetDatabase.GetAssetPath(sprite);
 										string materialFolder = path.Substring(0,path.LastIndexOf("/"));
@@ -266,18 +282,23 @@ namespace DragonBone
 											AssetDatabase.CreateAsset(atlasMat,matPath);
 										}
 										atlasMat.mainTexture = AssetDatabase.LoadAssetAtPath<Texture>(path);
+
+										mats.Add(atlasMat);
+										textureFrame.material = atlasMat;
+										textureFrame.texture = atlasMat.mainTexture;
+										tfs.Add(textureFrame);
 									}
 									else
 									{
-										foreach(SpriteFrame.TextureFrame st in frame.frames){
+										foreach(TextureFrame st in frame.frames){
 											if(st.name.Equals(displayData.textureName)){
-												rect = st.rect;
+												textureFrame = st;
 												break;
 											}
 										}
 									}
-									if(rect.width>0&&rect.height>0 && atlasMat && atlasMat.mainTexture){
-										ShowSpriteMesh(rect,atlasMat,displayData,slot,armatureEditor,slotData);
+									if(textureFrame.rect.width>0&&textureFrame.rect.height>0 && atlasMat && atlasMat.mainTexture){
+										ShowSpriteMesh(textureFrame,atlasMat,displayData,slot,armatureEditor,slotData);
 										++meshSpriteCount;
 									}
 								}
@@ -301,6 +322,9 @@ namespace DragonBone
 						}
 					}
 				}
+				armature.materials = mats.ToArray();
+				armature.textureFrames = tfs.ToArray();
+
 				foreach(SpriteFrame sf in frameKV.Values)
 				{
 					GameObject.DestroyImmediate(sf.gameObject);
@@ -419,23 +443,14 @@ namespace DragonBone
 			return renderer;
 		}
 
-		static void ShowSpriteMesh(Rect rect,Material mat,DragonBoneData.SkinSlotDisplayData displayData,Transform slot,ArmatureEditor armatureEditor,DragonBoneData.SlotData slotData){
+		static void ShowSpriteMesh(TextureFrame frame,Material mat,DragonBoneData.SkinSlotDisplayData displayData,Transform slot,ArmatureEditor armatureEditor,DragonBoneData.SlotData slotData){
 	
 			GameObject go = new GameObject(displayData.textureName);
 			SpriteMesh sm = go.AddComponent<SpriteMesh>();
 			sm.atlasMat = mat;
 			sm.vertices = displayData.vertices;
-			//uv to Atlas
-			Vector2[] uvs = displayData.uvs;
-			for(int i=0;i<uvs.Length;++i){
-				Vector2 uv=uvs[i];
-				Vector2 uvPos = new Vector2(rect.x,mat.mainTexture.height-rect.y-rect.height)+ 
-					new Vector2(rect.width*uv.x,rect.height*uv.y);
-				uv.x = uvPos.x/mat.mainTexture.width;
-				uv.y = uvPos.y/mat.mainTexture.height;
-				uvs[i] = uv;
-			}
-			sm.uvs = uvs;
+			sm.frame = frame;
+			sm.uvs = displayData.uvs;
 			sm.triangles = displayData.triangles;
 			sm.colors = new Color[sm.vertices.Length];
 			for(int i =0;i<sm.colors.Length;++i){

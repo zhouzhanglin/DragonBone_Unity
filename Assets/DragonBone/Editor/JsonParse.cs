@@ -40,6 +40,7 @@ namespace DragonBone
 				armatureEditor.armature = go.transform;
 				armatureEditor.bonesKV.Clear();
 				armatureEditor.slotsKV.Clear();
+				armatureEditor.slots.Clear();
 				armatureEditor.bonesDataKV.Clear();
 				armatureEditor.slotsDataKV.Clear();
 				armatureEditor.bones.Clear();
@@ -103,6 +104,7 @@ namespace DragonBone
 					if(slotObj.ContainKey("z"))  slotData.z = -slotObj["z"].AsFloat*armatureEditor.zoffset;
 					if(slotObj.ContainKey("displayIndex")) slotData.displayIndex = slotObj["displayIndex"].AsInt;
 					if(slotObj.ContainKey("scale")) slotData.scale = slotObj["scale"].AsFloat;
+					if(slotObj.ContainKey("blendMode")) slotData.blendMode = slotObj["blendMode"].ToString();
 					if(slotObj.ContainKey("color"))
 					{
 						SimpleJSON.JSONClass colorObj = slotObj["color"].AsObject;
@@ -189,6 +191,11 @@ namespace DragonBone
 						SimpleJSON.JSONArray ffds = animObj["ffd"].AsArray;
 						animData.ffdDatas = new DragonBoneData.AnimSubData[ffds.Count];
 						ParsetAnimBoneSlot(armatureEditor, ffds , animData.ffdDatas );
+					}
+					//zOrder
+					if(animObj.ContainKey("zOrder")){
+						SimpleJSON.JSONClass zOrders = animObj["zOrder"].AsObject;
+						ParseAnimSortOrder(armatureEditor, zOrders , animData );
 					}
 					animDatas[i] = animData;
 				}
@@ -327,6 +334,32 @@ namespace DragonBone
 					}
 				}
 				armatureEditor.armatureData.skinDatas = skinDatas;
+			}
+		}
+
+		private static void ParseAnimSortOrder(ArmatureEditor armatureEditor, SimpleJSON.JSONClass zOrders  ,DragonBoneData.AnimationData animData){
+			if(zOrders.ContainKey("frame")){
+				//just only one
+				DragonBoneData.AnimSubData subData = new DragonBoneData.AnimSubData();
+				animData.zOrderDatas = new DragonBoneData.AnimSubData[1]{subData};
+				if(zOrders.ContainKey("offset")) subData.offset = zOrders["offset"].AsFloat;
+
+				SimpleJSON.JSONArray frames = zOrders["frame"].AsArray;
+				subData.frameDatas = new DragonBoneData.AnimFrameData[frames.Count];
+				for(int i=0;i<frames.Count;++i){
+					SimpleJSON.JSONClass frameObj = frames[i].AsObject;
+					DragonBoneData.AnimFrameData frameData = new DragonBoneData.AnimFrameData();
+					subData.frameDatas[i] = frameData;
+
+					if(frameObj.ContainKey("duration")) frameData.duration = frameObj["duration"].AsInt;
+					if(frameObj.ContainKey("zOrder")){
+						SimpleJSON.JSONArray zs = frameObj["zOrder"].AsArray;
+						frameData.zOrder = new int[zs.Count];
+						for(int z=0;z<zs.Count;++z){
+							frameData.zOrder[z] = zs[z].AsInt;
+						}
+					}
+				}
 			}
 		}
 

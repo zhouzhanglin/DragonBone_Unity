@@ -1,16 +1,27 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace DragonBone
 {
 	public class DragonBoneArmature : MonoBehaviour {
 
+		[Range(0.0001f,1f)]
+		public float zSpace = 0.003f;
 		[SerializeField]
 		private bool m_FlipX;
-		public Transform[] slots;
+		[SerializeField]
+		private bool m_FlipY;
+
+		public Slot[] slots;
 		public SpriteFrame[] updateFrames;
 		public SpriteMesh[] updateMeshs;
 		public Renderer[] attachments;
+		public Material[] materials;
+		public TextureFrame[] textureFrames;
+
+		private List<Slot> m_ZOrderSlots;
+		private bool m_zOrderInvalid = false;
 
 		private Animator m_animator;
 		public Animator aniamtor{
@@ -33,13 +44,13 @@ namespace DragonBone
 					if(r) {
 						r.sortingLayerName = value;
 						#if UNITY_EDITOR 
-						UnityEditor.EditorUtility.SetDirty(r);
+						if(!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(r);
 						#endif
 						SpriteFrame sf = r.GetComponent<SpriteFrame>();
 						if(sf) {
 							sf.sortingLayerName = value;
 							#if UNITY_EDITOR 
-							UnityEditor.EditorUtility.SetDirty(sf);
+							if(!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(sf);
 							#endif
 						}
 						else {
@@ -47,7 +58,7 @@ namespace DragonBone
 							if(sm) {
 								sm.sortingLayerName = value;
 								#if UNITY_EDITOR 
-								UnityEditor.EditorUtility.SetDirty(sm);
+								if(!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(sm);
 								#endif
 							}
 						}
@@ -72,13 +83,13 @@ namespace DragonBone
 					if(r){
 						r.sortingOrder = value;
 						#if UNITY_EDITOR 
-						UnityEditor.EditorUtility.SetDirty(r);
+						if(!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(r);
 						#endif
 						SpriteFrame sf = r.GetComponent<SpriteFrame>();
 						if(sf) {
-							sf.soringOrder = value;
+							sf.sortingOrder = value;
 							#if UNITY_EDITOR 
-							UnityEditor.EditorUtility.SetDirty(sf);
+							if(!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(sf);
 							#endif
 						}
 						else {
@@ -86,7 +97,7 @@ namespace DragonBone
 							if(sm) {
 								sm.sortingOrder = value;
 								#if UNITY_EDITOR 
-								UnityEditor.EditorUtility.SetDirty(sm);
+								if(!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(sm);
 								#endif
 							}
 						}
@@ -95,49 +106,60 @@ namespace DragonBone
 			}
 		}
 
+
 		public bool flipX{
 			get { return m_FlipX; }
 			set {
 				#if !UNITY_EDITOR
-				if(m_FlipX != value) return;
+				if(m_FlipX == value) return;
 				#endif
-
 				m_FlipX =  value;
-				Vector3 rotate = transform.localEulerAngles;
-				if(m_FlipX){
-					rotate.y = 180f;
-					int len = slots.Length;
-					for(int i=0;i<len;++i){
-						Transform slot = slots[i];
-						if(slot){
-							Vector3 v = slot.localPosition;
-							v.z = Mathf.Abs(v.z);
-							slot.localPosition = v;
-							#if UNITY_EDITOR 
-							UnityEditor.EditorUtility.SetDirty(slot);
-							#endif
-						}
-					}
-				}else{
-					rotate.y = 0f;
-					int len = slots.Length;
-					for(int i=0;i<len;++i){
-						Transform slot = slots[i];
-						if(slot){
-							Vector3 v = slot.localPosition;
-							v.z = -Mathf.Abs(v.z);
-							slot.localPosition = v;
-							#if UNITY_EDITOR 
-							UnityEditor.EditorUtility.SetDirty(slot);
-							#endif
-						}
-					}
-				}
-				transform.localEulerAngles = rotate;
+
+				transform.Rotate(0f,180f,0f);
+
+				Vector3 v = transform.localEulerAngles;
+				v.x = ClampAngle(v.x,-360f,360f);
+				v.y = ClampAngle(v.y,-360f,360f);
+				v.z = ClampAngle(v.z,-720f,720f);
+				transform.localEulerAngles=v;
+
 				#if UNITY_EDITOR 
-				UnityEditor.EditorUtility.SetDirty(transform);
+				if(!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(transform);
 				#endif
+				ResetSlotZOrder();
 			}
+		}
+
+		public bool flipY{
+			get { return m_FlipY; }
+			set {
+				#if !UNITY_EDITOR
+				if(m_FlipY == value) return;
+				#endif
+				m_FlipY =  value;
+				transform.Rotate(180f,0f,0f);
+
+				Vector3 v = transform.localEulerAngles;
+				v.x = ClampAngle(v.x,-360f,360f);
+				v.y = ClampAngle(v.y,-360f,360f);
+				v.z = ClampAngle(v.z,-720f,720f);
+				transform.localEulerAngles=v;
+
+				#if UNITY_EDITOR 
+				if(!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(transform);
+				#endif
+				ResetSlotZOrder();
+			}
+		}
+
+		float ClampAngle(float angle,float min ,float max){
+			if (angle<90 || angle>270){       // if angle in the critic region...
+				if (angle>180) angle -= 360;  // convert all angles to -180..+180
+				if (max>180) max -= 360;
+				if (min>180) min -= 360;
+			}
+			angle = Mathf.Clamp(angle, min, max);
+			return angle;
 		}
 
 		void Awake(){
@@ -151,9 +173,39 @@ namespace DragonBone
 
 		// Update is called once per frame
 		void Update () {
-			if(m_animator==null || m_animator.enabled)
+			if(m_animator!=null && m_animator.enabled)
 			{
 				UpdateArmature();
+			}
+		}
+
+		//after animation frame
+		void LateUpdate(){
+			if(m_animator!=null && m_animator.enabled && m_ZOrderSlots!=null)
+			{
+				if(m_zOrderInvalid){
+					//reset zspace
+					int len = m_ZOrderSlots.Count;
+
+					float zoff = m_FlipX || m_FlipY ? 1f : -1f;
+					if(m_FlipX && m_FlipY) zoff = -1f;
+					zoff*=zSpace;
+
+					for(int i=0;i<len;++i){
+						Slot slot = m_ZOrderSlots[i];
+						if(slot && slot.isActiveAndEnabled ){
+							Vector3 v = slot.transform.localPosition;
+							v.z = zoff*i+zoff*0.00001f;
+							slot.transform.localPosition = v;
+						}
+					}
+					m_zOrderInvalid = false;
+
+					//resume
+					m_ZOrderSlots.Sort(delegate(Slot x, Slot y) {
+						return x.zOrder-y.zOrder;
+					});
+				}
 			}
 		}
 
@@ -172,6 +224,49 @@ namespace DragonBone
 				SpriteMesh mesh = updateMeshs[i];
 				if(mesh&&mesh.isActiveAndEnabled) mesh.UpdateMesh();
 			}
+
+			len = slots.Length;
+			for(int i=0;i<len;++i){
+				Slot slot = slots[i];
+				if(slot && slot.isActiveAndEnabled){
+					slot.UpdateSlot();
+				}
+			}
 		}
+
+		/// <summary>
+		/// Resets the slot Z order.
+		/// </summary>
+		public void ResetSlotZOrder(){
+			float tempZ = m_FlipX || m_FlipY ? 1f : -1f;
+			if(m_FlipX && m_FlipY) tempZ = -1f;
+
+			tempZ*=zSpace;
+			int len = slots.Length;
+			for(int i=0;i<len;++i){
+				Slot slot = slots[i];
+				if(slot){
+					Vector3 v = slot.transform.localPosition;
+					v.z = tempZ*slot.zOrder+tempZ*0.00001f;
+					slot.transform.localPosition = v;
+					#if UNITY_EDITOR 
+					if(!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(slot.transform);
+					#endif
+				}
+			}
+		}
+
+		/// <summary>
+		/// slot call this function
+		/// </summary>
+		/// <param name="slot">Slot.</param>
+		public void UpdateSlotZOrder(Slot slot){
+			if(m_ZOrderSlots==null) m_ZOrderSlots = new List<Slot>(slots);
+			m_ZOrderSlots.Remove(slot);
+			m_ZOrderSlots.Insert(slot.zOrder+slot.z,slot);
+
+			m_zOrderInvalid = true;
+		}
+
 	}
 }

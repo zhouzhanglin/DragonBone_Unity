@@ -17,11 +17,13 @@ namespace DragonBone
 
 		private static Dictionary<string,SpriteFrame> changedSpriteFramesKV = null;
 		private static Dictionary<string,SpriteMesh> changedSpriteMeshsKV = null;
+		private static Dictionary<string,string> slotPathKV = null;
 
 		public static void CreateAnimFile(ArmatureEditor armatureEditor)
 		{
 			changedSpriteFramesKV=  new Dictionary<string, SpriteFrame>();
 			changedSpriteMeshsKV =  new Dictionary<string, SpriteMesh>();
+			slotPathKV = new Dictionary<string, string>();
 
 			string path = AssetDatabase.GetAssetPath(armatureEditor.animTextAsset);
 			path = path.Substring(0,path.LastIndexOf('/'))+"/"+armatureEditor.armature.name+"_Anims";
@@ -55,9 +57,10 @@ namespace DragonBone
 					clip.name = animationData.name;
 					clip.frameRate = armatureEditor.armatureData.frameRate;
 
-					CreateAnimBoneAndSlot(armatureEditor ,clip,animationData.boneDatas , armatureEditor.bonesKV , true);
-					CreateAnimBoneAndSlot(armatureEditor ,clip,animationData.slotDatas , armatureEditor.slotsKV , false);
-					CreateAnimBoneAndSlot(armatureEditor ,clip,animationData.ffdDatas , armatureEditor.slotsKV , false,true);
+					CreateBoneAnim(armatureEditor ,clip,animationData.boneDatas , armatureEditor.bonesKV);
+					CreateSlotAnim(armatureEditor ,clip,animationData.slotDatas , armatureEditor.slotsKV );
+					CreateFFDAnim(armatureEditor ,clip,animationData.ffdDatas , armatureEditor.slotsKV);
+					CreateAnimZOrder	(armatureEditor,clip,animationData.zOrderDatas);
 					SetDragonBoneArmature(armatureEditor);
 					SetEvent(armatureEditor,clip,animationData.keyDatas);
 
@@ -123,42 +126,84 @@ namespace DragonBone
 			return TangentMode.Linear;
 		}
 
-		static void CreateAnimBoneAndSlot(ArmatureEditor armatureEditor, AnimationClip clip , DragonBoneData.AnimSubData[] subDatas , Dictionary<string,Transform> transformKV , bool boneOrSlot , bool isffd = false)
+
+		static void CreateAnimZOrder(ArmatureEditor armatureEditor, AnimationClip clip , DragonBoneData.AnimSubData[] subDatas)
 		{
+			if(subDatas==null) return;
+			int len = subDatas.Length;
+			float perKeyTime = 1f/armatureEditor.armatureData.frameRate;
+			for(int i=0;i<len;++i){
+				DragonBoneData.AnimSubData animSubData = subDatas[i];
+				float during = animSubData.offset;
+
+				Dictionary<string ,AnimationCurve> slotZOrderKV = new Dictionary<string, AnimationCurve>();
+
+				DragonBoneData.AnimFrameData[] frameDatas = animSubData.frameDatas;
+				for(int j=0;j<frameDatas.Length;++j){
+					DragonBoneData.AnimFrameData frameData = frameDatas[j]; 
+					if(frameData.zOrder!=null && frameData.zOrder.Length>0)
+					{
+						for(int z=0;z<frameData.zOrder.Length;z+=2){
+							int slotIdx = frameData.zOrder[z];
+							int changeZ = frameData.zOrder[z+1];
+							Slot slot = armatureEditor.slots[slotIdx];
+							string path = "";
+							if(slotPathKV.ContainsKey(slot.name)){
+								path = slotPathKV[slot.name];
+							}else{
+								path = GetNodeRelativePath(armatureEditor,slot.transform) ;
+								slotPathKV[slot.name] = path;
+							}
+
+							AnimationCurve curve = null;
+							if(slotZOrderKV.ContainsKey(slot.name)){
+								curve = slotZOrderKV[slot.name];
+							}else{
+								curve = new AnimationCurve();
+								slotZOrderKV[slot.name] = curve;
+							}
+							if(curve.length==0 && during>0){
+								//first key
+								curve.AddKey( new Keyframe(0,0,float.PositiveInfinity,float.PositiveInfinity));
+							}
+							if(frameDatas.Length==j+1){
+								//last
+								curve.AddKey( new Keyframe(during+frameData.duration*perKeyTime,changeZ,float.PositiveInfinity,float.PositiveInfinity));
+							}
+							curve.AddKey( new Keyframe(during,changeZ,float.PositiveInfinity,float.PositiveInfinity));
+						}
+					}
+					during+= frameData.duration*perKeyTime;
+				}
+				foreach(string name in slotZOrderKV.Keys)
+				{
+					AnimationCurve zOrderCurve = slotZOrderKV[name];
+					Slot slot = armatureEditor.slotsKV[name].GetComponent<Slot>();
+
+					CurveExtension.OptimizesCurve(zOrderCurve);
+					if(zOrderCurve!=null && zOrderCurve.keys!=null && zOrderCurve.keys.Length>0 && CheckCurveValid(zOrderCurve,slot.zOrder)){
+						clip.SetCurve(slotPathKV[name],typeof(Slot),"m_z",zOrderCurve);
+					}
+				}
+			}
+		}
+
+		static void CreateFFDAnim(ArmatureEditor armatureEditor, AnimationClip clip , DragonBoneData.AnimSubData[] subDatas , Dictionary<string,Transform> transformKV)
+		{
+			if(subDatas==null) return;
 			for(int i=0;i<subDatas.Length;++i)
 			{
 				DragonBoneData.AnimSubData animSubData = subDatas[i];
-				string name = string.IsNullOrEmpty(animSubData.slot) ? animSubData.name : animSubData.slot;
-				Transform node = transformKV[name];
-				DragonBoneData.TransformData defaultTransformData = boneOrSlot ? armatureEditor.bonesDataKV[animSubData.name].transform:null;
-				float defaultZ = boneOrSlot ? 0: armatureEditor.slotsDataKV[name].z ;;
-				DragonBoneData.SlotData defaultSlotData = boneOrSlot ? null:armatureEditor.slotsDataKV[name];
-				DragonBoneData.ColorData defaultColorData = boneOrSlot ? null: defaultSlotData.color ;
-				AnimationCurve xcurve = new AnimationCurve();
-				AnimationCurve ycurve = new AnimationCurve();
-				AnimationCurve zcurve = new AnimationCurve();
-				AnimationCurve sxcurve = new AnimationCurve();
-				AnimationCurve sycurve = new AnimationCurve();
-				AnimationCurve color_rcurve = new AnimationCurve();
-				AnimationCurve color_gcurve = new AnimationCurve();
-				AnimationCurve color_bcurve = new AnimationCurve();
-				AnimationCurve color_acurve = new AnimationCurve();
-				AnimationCurve rotatecurve = new AnimationCurve();
-
-				Renderer[] renders = node.GetComponentsInChildren<Renderer>();
-				AnimationCurve[] renderCurves = new AnimationCurve[renders.Length];
-				for(int r=0;r<renderCurves.Length;++r){
-					renderCurves[r] = new AnimationCurve();
-				}
+				string slotName = string.IsNullOrEmpty(animSubData.slot) ? animSubData.name : animSubData.slot;
+				Transform slotNode = transformKV[slotName];
 
 				List<AnimationCurve[]> vertexcurvexArray = null;
 				List<AnimationCurve[]> vertexcurveyArray = null;
-				if(isffd && node.childCount>0){
+				if(slotNode.childCount>0){
 					vertexcurvexArray = new List<AnimationCurve[]>();
 					vertexcurveyArray = new List<AnimationCurve[]>();
-
-					for(int j=0;j<node.childCount;++j){
-						Transform ffdNode = node.GetChild(j);
+					for(int j=0;j<slotNode.childCount;++j){
+						Transform ffdNode = slotNode.GetChild(j);
 						if(ffdNode.name==animSubData.name){
 							AnimationCurve[] vertex_xcurves = new AnimationCurve[ffdNode.childCount];
 							AnimationCurve[] vertex_ycurves = new AnimationCurve[ffdNode.childCount];
@@ -170,8 +215,153 @@ namespace DragonBone
 							vertexcurveyArray.Add(vertex_ycurves);
 						}
 					}
+				}
+
+				float during = animSubData.offset;
+				float perKeyTime = 1f/armatureEditor.armatureData.frameRate;
+				bool isHaveCurve = false;
+				for(int j=0;j<animSubData.frameDatas.Length;++j)
+				{
+					DragonBoneData.AnimFrameData frameData = animSubData.frameDatas[j];
+
+					float prevTweeneasing = float.PositiveInfinity;//前一帧的tweenEasing
+					float[] prevCurves = null;
+					if(j>0) {
+						prevTweeneasing = animSubData.frameDatas[j-1].tweenEasing;
+						prevCurves = animSubData.frameDatas[j-1].curve;
+					}
+					TangentMode tanModeL = GetPrevFrameTangentMode(prevTweeneasing,prevCurves);
+					TangentMode tanModeR = TangentMode.Linear;
+
+					if(frameData.curve!=null && frameData.curve.Length>0){
+						tanModeR = TangentMode.Editable;
+						isHaveCurve = true;
+					}else{
+						if(frameData.tweenEasing==float.PositiveInfinity){
+							tanModeR = TangentMode.Stepped;
+						}
+						else if(frameData.tweenEasing==0){
+							tanModeR = TangentMode.Linear;
+						}else if(frameData.tweenEasing==1){
+							tanModeR = TangentMode.Smooth;
+						}else if(frameData.tweenEasing==2){
+							tanModeR = TangentMode.Linear;
+						}
+					}
+
+					//mesh animation
+					if(vertexcurvexArray!=null){
+						for(int k=0;k<vertexcurvexArray.Count;++k)
+						{
+							Transform ffdNode = slotNode.GetChild(k);
+							if(ffdNode.name==animSubData.name){
+								AnimationCurve[] vertex_xcurves = vertexcurvexArray[k];
+								AnimationCurve[] vertex_ycurves = vertexcurveyArray[k];
+								int len = ffdNode.childCount;
+								if(frameData.vertices!=null && frameData.vertices.Length>0)
+								{
+									for(int r =0;r<len;++r){
+										AnimationCurve vertex_xcurve = vertex_xcurves[r];
+										AnimationCurve vertex_ycurve = vertex_ycurves[r];
+										Transform vCtr = ffdNode.GetChild(r);//顶点控制点
+										if(r>=frameData.offset && r-frameData.offset<frameData.vertices.Length){
+											Keyframe kfx = KeyframeUtil.GetNew(during,vCtr.localPosition.x+frameData.vertices[r-frameData.offset].x,tanModeL,tanModeR);
+											vertex_xcurve.AddKey(kfx);
+											Keyframe kfy = KeyframeUtil.GetNew(during,vCtr.localPosition.y+frameData.vertices[r-frameData.offset].y,tanModeL,tanModeR);
+											vertex_ycurve.AddKey(kfy);
+										}
+										else
+										{
+											Keyframe kfx = KeyframeUtil.GetNew(during,vCtr.localPosition.x,tanModeL,tanModeR);
+											vertex_xcurve.AddKey(kfx);
+											Keyframe kfy = KeyframeUtil.GetNew(during,vCtr.localPosition.y,tanModeL,tanModeR);
+											vertex_ycurve.AddKey(kfy);
+										}
+									}
+								}
+								else
+								{
+									//add default vertex position
+									for(int r =0;r<len;++r){
+										AnimationCurve vertex_xcurve = vertex_xcurves[r];
+										AnimationCurve vertex_ycurve = vertex_ycurves[r];
+										Transform vCtr = slotNode.GetChild(k).GetChild(r);//顶点控制点
+										Keyframe kfx = KeyframeUtil.GetNew(during,vCtr.localPosition.x,tanModeL,tanModeR);
+										vertex_xcurve.AddKey(kfx);
+										Keyframe kfy = KeyframeUtil.GetNew(during,vCtr.localPosition.y,tanModeL,tanModeR);
+										vertex_ycurve.AddKey(kfy);
+									}
+								}
+							}
+						}
+
+					}
+
+					during+= frameData.duration*perKeyTime;
+				}
+
+				string path = "";
+				if(slotPathKV.ContainsKey(slotName)){
+					path= slotPathKV[slotName];
+				}else{
+					path = GetNodeRelativePath(armatureEditor,slotNode) ;
+					slotPathKV[slotName] = path;
+				}
+
+				if(vertexcurvexArray!=null)
+				{
+					for(int k=0;k<vertexcurvexArray.Count;++k){
+						Transform ffdNode = slotNode.GetChild(k);
+						if(ffdNode.name==animSubData.name){
+
+							changedSpriteMeshsKV[path+"/"+ffdNode.name] = ffdNode.GetComponent<SpriteMesh>();
+
+							AnimationCurve[] vertex_xcurves= vertexcurvexArray[k];
+							AnimationCurve[] vertex_ycurves= vertexcurveyArray[k];
+							for(int r=0;r<vertex_xcurves.Length;++r){
+								AnimationCurve vertex_xcurve = vertex_xcurves[r];
+								AnimationCurve vertex_ycurve = vertex_ycurves[r];
+								Transform v = ffdNode.GetChild(r);
+								string ctrlPath = path+"/"+ffdNode.name+"/"+v.name;
+
+								CurveExtension.OptimizesCurve(vertex_xcurve);
+								CurveExtension.OptimizesCurve(vertex_ycurve);
+
+								bool vcurveFlag = false;
+								if(vertex_xcurve.keys !=null&& vertex_xcurve.keys.Length>0&& CheckCurveValid(vertex_xcurve,v.localPosition.x)) vcurveFlag = true;
+								if(vertex_ycurve.keys !=null&& vertex_ycurve.keys.Length>0&& CheckCurveValid(vertex_ycurve,v.localPosition.y)) vcurveFlag=  true;
+								if(vcurveFlag){
+									if(isHaveCurve) SetCustomCurveTangents(vertex_xcurve,animSubData.frameDatas);
+									CurveExtension.UpdateAllLinearTangents(vertex_xcurve);
+									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( ctrlPath, typeof( Transform ), "m_LocalPosition.x" ), vertex_xcurve );
+									if(isHaveCurve) SetCustomCurveTangents(vertex_ycurve,animSubData.frameDatas);
+									CurveExtension.UpdateAllLinearTangents(vertex_ycurve);
+									AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( ctrlPath, typeof( Transform ), "m_LocalPosition.y" ), vertex_ycurve );
+								}
+							}
+						}
+					}
 
 				}
+			}
+		}
+
+		static void CreateBoneAnim(ArmatureEditor armatureEditor, AnimationClip clip , DragonBoneData.AnimSubData[] subDatas , Dictionary<string,Transform> transformKV)
+		{
+			if(subDatas==null) return;
+			Dictionary<string,string> bonePathKV = new Dictionary<string, string>();
+			for(int i=0;i<subDatas.Length;++i)
+			{
+				DragonBoneData.AnimSubData animSubData = subDatas[i];
+				string boneName = animSubData.name;
+				Transform boneNode = transformKV[boneName];
+				DragonBoneData.TransformData defaultTransformData = armatureEditor.bonesDataKV[animSubData.name].transform;
+
+				AnimationCurve xcurve = new AnimationCurve();
+				AnimationCurve ycurve = new AnimationCurve();
+				AnimationCurve sxcurve = new AnimationCurve();
+				AnimationCurve sycurve = new AnimationCurve();
+				AnimationCurve rotatecurve = new AnimationCurve();
 
 				float during = animSubData.offset;
 				float perKeyTime = 1f/armatureEditor.armatureData.frameRate;
@@ -228,136 +418,48 @@ namespace DragonBone
 							ycurve.AddKey(KeyframeUtil.GetNew(during,defaultTransformData.y,tanModeL,tanModeR));
 						}
 
-						if(!float.IsNaN(frameData.z)) zcurve.AddKey(new Keyframe(during,frameData.z,float.PositiveInfinity,float.PositiveInfinity));
-						else if(!boneOrSlot) zcurve.AddKey(new Keyframe(during,node.localPosition.z,float.PositiveInfinity,float.PositiveInfinity));
-
 						if(!float.IsNaN(frameData.transformData.rotate)) {
 							float rotate = frameData.transformData.rotate+defaultTransformData.rotate;
 							rotatecurve.AddKey(KeyframeUtil.GetNew(during,rotate,tanModeL,tanModeR));
 						}
 						else if(!float.IsNaN(defaultTransformData.rotate)){
-							rotatecurve.AddKey(KeyframeUtil.GetNew(during,node.localEulerAngles.z,tanModeL,tanModeR));
+							rotatecurve.AddKey(KeyframeUtil.GetNew(during,boneNode.localEulerAngles.z,tanModeL,tanModeR));
 						}
 
 						if(!float.IsNaN(frameData.transformData.scx)){
 							sxcurve.AddKey(KeyframeUtil.GetNew(during,frameData.transformData.scx*defaultTransformData.scx,tanModeL,tanModeR));
 						}
 						else{
-							sxcurve.AddKey(KeyframeUtil.GetNew(during,node.localScale.x,tanModeL,tanModeR));
+							sxcurve.AddKey(KeyframeUtil.GetNew(during,boneNode.localScale.x,tanModeL,tanModeR));
 						}
 
 						if(!float.IsNaN(frameData.transformData.scy)) {
 							sycurve.AddKey(KeyframeUtil.GetNew(during,frameData.transformData.scy*defaultTransformData.scy,tanModeL,tanModeR));
 						}
 						else {
-							sycurve.AddKey(KeyframeUtil.GetNew(during,node.localScale.y,tanModeL,tanModeR));
+							sycurve.AddKey(KeyframeUtil.GetNew(during,boneNode.localScale.y,tanModeL,tanModeR));
 						}
 
 					}
-					if(!boneOrSlot){
-						if(frameData.color!=null){
-							if(defaultColorData==null) defaultColorData = new DragonBoneData.ColorData();
-							Color c = new Color(  
-								frameData.color.rM+frameData.color.r0,
-								frameData.color.gM+frameData.color.g0,
-								frameData.color.bM+frameData.color.b0,
-								frameData.color.aM+frameData.color.a0
-							);
-							color_rcurve.AddKey(KeyframeUtil.GetNew(during,c.r,tanModeL,tanModeR));
-							color_gcurve.AddKey(KeyframeUtil.GetNew(during,c.g,tanModeL,tanModeR));
-							color_bcurve.AddKey(KeyframeUtil.GetNew(during,c.b,tanModeL,tanModeR));
-							color_acurve.AddKey(KeyframeUtil.GetNew(during,c.a,tanModeL,tanModeR));
-						}
-
-						if(!isffd){
-							//改displyindex
-							if(frameData.displayIndex==-1){
-								for(int r=0;r<renders.Length;++r){
-									renderCurves[r].AddKey( new Keyframe(during,0f,float.PositiveInfinity,float.PositiveInfinity));
-								}
-							}
-							else
-							{
-								for(int r=0;r<renders.Length;++r){
-									if(r!=frameData.displayIndex){
-										renderCurves[r].AddKey( new Keyframe(during,0f,float.PositiveInfinity,float.PositiveInfinity));
-									}else{
-										renderCurves[r].AddKey( new Keyframe(during,1f,float.PositiveInfinity,float.PositiveInfinity));
-									}
-								}
-							}
-						}
-					}
-
-
-					//mesh animation
-					if(isffd && vertexcurvexArray!=null){
-						for(int k=0;k<vertexcurvexArray.Count;++k)
-						{
-							Transform ffdNode = node.GetChild(k);
-							if(ffdNode.name==animSubData.name){
-								AnimationCurve[] vertex_xcurves = vertexcurvexArray[k];
-								AnimationCurve[] vertex_ycurves = vertexcurveyArray[k];
-								int len = ffdNode.childCount;
-								if(frameData.vertices!=null && frameData.vertices.Length>0)
-								{
-									for(int r =0;r<len;++r){
-										AnimationCurve vertex_xcurve = vertex_xcurves[r];
-										AnimationCurve vertex_ycurve = vertex_ycurves[r];
-										Transform vCtr = ffdNode.GetChild(r);//顶点控制点
-										if(r>=frameData.offset && r-frameData.offset<frameData.vertices.Length){
-											Keyframe kfx = KeyframeUtil.GetNew(during,vCtr.localPosition.x+frameData.vertices[r-frameData.offset].x,tanModeL,tanModeR);
-											vertex_xcurve.AddKey(kfx);
-											Keyframe kfy = KeyframeUtil.GetNew(during,vCtr.localPosition.y+frameData.vertices[r-frameData.offset].y,tanModeL,tanModeR);
-											vertex_ycurve.AddKey(kfy);
-										}
-										else
-										{
-											Keyframe kfx = KeyframeUtil.GetNew(during,vCtr.localPosition.x,tanModeL,tanModeR);
-											vertex_xcurve.AddKey(kfx);
-											Keyframe kfy = KeyframeUtil.GetNew(during,vCtr.localPosition.y,tanModeL,tanModeR);
-											vertex_ycurve.AddKey(kfy);
-										}
-									}
-								}
-								else
-								{
-									//add default vertex position
-									for(int r =0;r<len;++r){
-										AnimationCurve vertex_xcurve = vertex_xcurves[r];
-										AnimationCurve vertex_ycurve = vertex_ycurves[r];
-										Transform vCtr = node.GetChild(k).GetChild(r);//顶点控制点
-										Keyframe kfx = KeyframeUtil.GetNew(during,vCtr.localPosition.x,tanModeL,tanModeR);
-										vertex_xcurve.AddKey(kfx);
-										Keyframe kfy = KeyframeUtil.GetNew(during,vCtr.localPosition.y,tanModeL,tanModeR);
-										vertex_ycurve.AddKey(kfy);
-									}
-								}
-							}
-						}
-
-					}
-
 					during+= frameData.duration*perKeyTime;
 				}
 
 				CurveExtension.OptimizesCurve(xcurve);
 				CurveExtension.OptimizesCurve(ycurve);
-				CurveExtension.OptimizesCurve(zcurve);
 				CurveExtension.OptimizesCurve(sxcurve);
 				CurveExtension.OptimizesCurve(sycurve);
-				CurveExtension.OptimizesCurve(color_rcurve);
-				CurveExtension.OptimizesCurve(color_gcurve);
-				CurveExtension.OptimizesCurve(color_bcurve);
-				CurveExtension.OptimizesCurve(color_acurve);
 				CurveExtension.OptimizesCurve(rotatecurve);
 
-
-				string path = GetNodeRelativePath(armatureEditor,node) ;
+				string path = "";
+				if(bonePathKV.ContainsKey(boneName)){
+					path = bonePathKV[boneName];
+				}else{
+					path = GetNodeRelativePath(armatureEditor,boneNode) ;
+					bonePathKV[boneName] = path;
+				}
 				bool localPosFlag = false;
-				if(xcurve.keys !=null && xcurve.keys.Length>0 && CheckCurveValid(xcurve,node.localPosition.x)) localPosFlag = true;
-				if(ycurve.keys !=null && ycurve.keys.Length>0 && CheckCurveValid(ycurve,node.localPosition.y))  localPosFlag = true;
-				if(zcurve.keys !=null && zcurve.keys.Length>0 && CheckCurveValid(zcurve,defaultZ))  localPosFlag = true;
+				if(xcurve.keys !=null && xcurve.keys.Length>0 && CheckCurveValid(xcurve,boneNode.localPosition.x)) localPosFlag = true;
+				if(ycurve.keys !=null && ycurve.keys.Length>0 && CheckCurveValid(ycurve,boneNode.localPosition.y))  localPosFlag = true;
 				if(localPosFlag){
 					if(isHaveCurve) SetCustomCurveTangents(xcurve,animSubData.frameDatas);
 					CurveExtension.UpdateAllLinearTangents(xcurve);
@@ -385,101 +487,164 @@ namespace DragonBone
 					CurveExtension.UpdateAllLinearTangents(rotatecurve);
 					clip.SetCurve(path,typeof(Transform),"localEulerAngles.z",rotatecurve);
 				}
+			}
+		}
 
-				if(!boneOrSlot){
-					if(defaultColorData==null) defaultColorData = new DragonBoneData.ColorData();
+		static void CreateSlotAnim(ArmatureEditor armatureEditor, AnimationClip clip , DragonBoneData.AnimSubData[] subDatas , Dictionary<string,Transform> transformKV)
+		{
+			for(int i=0;i<subDatas.Length;++i)
+			{
+				DragonBoneData.AnimSubData animSubData = subDatas[i];
+				string slotName = string.IsNullOrEmpty(animSubData.slot) ? animSubData.name : animSubData.slot;
+				Transform slotNode = transformKV[slotName];
+				DragonBoneData.SlotData defaultSlotData = armatureEditor.slotsDataKV[slotName];
+				DragonBoneData.ColorData defaultColorData = defaultSlotData.color ;
 
-					float da = defaultColorData.aM+defaultColorData.a0;
-					float dr = defaultColorData.rM+defaultColorData.r0;
-					float dg = defaultColorData.gM+defaultColorData.g0;
-					float db = defaultColorData.bM+defaultColorData.b0;
-					if(armatureEditor.useUnitySprite)
-					{
-						SpriteRenderer[] sprites = node.GetComponentsInChildren<SpriteRenderer>();
-						if(sprites!=null){
-							for(int z=0;z<sprites.Length;++z){
-								string childPath = path+"/"+sprites[z].name;
-								SetColorCurve<SpriteRenderer>(childPath,clip,color_rcurve,"m_Color.r",isHaveCurve,dr,animSubData.frameDatas);
-								SetColorCurve<SpriteRenderer>(childPath,clip,color_gcurve,"m_Color.g",isHaveCurve,dg,animSubData.frameDatas);
-								SetColorCurve<SpriteRenderer>(childPath,clip,color_bcurve,"m_Color.b",isHaveCurve,db,animSubData.frameDatas);
-								SetColorCurve<SpriteRenderer>(childPath,clip,color_acurve,"m_Color.a",isHaveCurve,da,animSubData.frameDatas);
-							}
+				AnimationCurve color_rcurve = new AnimationCurve();
+				AnimationCurve color_gcurve = new AnimationCurve();
+				AnimationCurve color_bcurve = new AnimationCurve();
+				AnimationCurve color_acurve = new AnimationCurve();
+
+				Renderer[] renders = slotNode.GetComponentsInChildren<Renderer>();
+				AnimationCurve[] renderCurves = new AnimationCurve[renders.Length];
+				for(int r=0;r<renderCurves.Length;++r){
+					renderCurves[r] = new AnimationCurve();
+				}
+
+				float during = animSubData.offset;
+				float perKeyTime = 1f/armatureEditor.armatureData.frameRate;
+				bool isHaveCurve = false;
+				for(int j=0;j<animSubData.frameDatas.Length;++j)
+				{
+					DragonBoneData.AnimFrameData frameData = animSubData.frameDatas[j];
+
+					float prevTweeneasing = float.PositiveInfinity;//前一帧的tweenEasing
+					float[] prevCurves = null;
+					if(j>0) {
+						prevTweeneasing = animSubData.frameDatas[j-1].tweenEasing;
+						prevCurves = animSubData.frameDatas[j-1].curve;
+					}
+					TangentMode tanModeL = GetPrevFrameTangentMode(prevTweeneasing,prevCurves);
+					TangentMode tanModeR = TangentMode.Linear;
+
+					if(frameData.curve!=null && frameData.curve.Length>0){
+						tanModeR = TangentMode.Editable;
+						isHaveCurve = true;
+					}else{
+						if(frameData.tweenEasing==float.PositiveInfinity){
+							tanModeR = TangentMode.Stepped;
+						}
+						else if(frameData.tweenEasing==0){
+							tanModeR = TangentMode.Linear;
+						}else if(frameData.tweenEasing==1){
+							tanModeR = TangentMode.Smooth;
+						}else if(frameData.tweenEasing==2){
+							tanModeR = TangentMode.Linear;
+						}
+					}
+
+					if(frameData.color!=null){
+						if(defaultColorData==null) defaultColorData = new DragonBoneData.ColorData();
+						Color c = new Color(  
+							frameData.color.rM+frameData.color.r0,
+							frameData.color.gM+frameData.color.g0,
+							frameData.color.bM+frameData.color.b0,
+							frameData.color.aM+frameData.color.a0
+						);
+						color_rcurve.AddKey(KeyframeUtil.GetNew(during,c.r,tanModeL,tanModeR));
+						color_gcurve.AddKey(KeyframeUtil.GetNew(during,c.g,tanModeL,tanModeR));
+						color_bcurve.AddKey(KeyframeUtil.GetNew(during,c.b,tanModeL,tanModeR));
+						color_acurve.AddKey(KeyframeUtil.GetNew(during,c.a,tanModeL,tanModeR));
+					}
+
+					//改displyindex
+					if(frameData.displayIndex==-1){
+						for(int r=0;r<renders.Length;++r){
+							renderCurves[r].AddKey( new Keyframe(during,0f,float.PositiveInfinity,float.PositiveInfinity));
 						}
 					}
 					else
 					{
-						SpriteFrame[] sprites = node.GetComponentsInChildren<SpriteFrame>();
-						if(sprites!=null){
-							for(int z=0;z<sprites.Length;++z){
-								string childPath = path+"/"+sprites[z].name;
-								bool anim_r = SetColorCurve<SpriteFrame>(childPath,clip,color_rcurve,"m_color.r",isHaveCurve,dr,animSubData.frameDatas);
-								bool anim_g = SetColorCurve<SpriteFrame>(childPath,clip,color_gcurve,"m_color.g",isHaveCurve,dg,animSubData.frameDatas);
-								bool anim_b = SetColorCurve<SpriteFrame>(childPath,clip,color_bcurve,"m_color.b",isHaveCurve,db,animSubData.frameDatas);
-								bool anim_a = SetColorCurve<SpriteFrame>(childPath,clip,color_acurve,"m_color.a",isHaveCurve,da,animSubData.frameDatas);
-								if(anim_r||anim_g||anim_b||anim_a){
-									changedSpriteFramesKV[childPath] = sprites[z];
-								}
+						for(int r=0;r<renders.Length;++r){
+							if(r!=frameData.displayIndex){
+								renderCurves[r].AddKey( new Keyframe(during,0f,float.PositiveInfinity,float.PositiveInfinity));
+							}else{
+								renderCurves[r].AddKey( new Keyframe(during,1f,float.PositiveInfinity,float.PositiveInfinity));
 							}
 						}
+					}
+					during+= frameData.duration*perKeyTime;
+				}
 
-						SpriteMesh[] spriteMeshs = node.GetComponentsInChildren<SpriteMesh>();
-						if(spriteMeshs!=null){
-							for(int z=0;z<spriteMeshs.Length;++z){
-								string childPath = path+"/"+spriteMeshs[z].name;
-								bool anim_r = SetColorCurve<SpriteMesh>(childPath,clip,color_rcurve,"m_color.r",isHaveCurve,da,animSubData.frameDatas);
-								bool anim_g = SetColorCurve<SpriteMesh>(childPath,clip,color_gcurve,"m_color.g",isHaveCurve,dg,animSubData.frameDatas);
-								bool anim_b = SetColorCurve<SpriteMesh>(childPath,clip,color_bcurve,"m_color.b",isHaveCurve,db,animSubData.frameDatas);
-								bool anim_a = SetColorCurve<SpriteMesh>(childPath,clip,color_acurve,"m_color.a",isHaveCurve,da,animSubData.frameDatas);
-								if(anim_r||anim_g||anim_b||anim_a){
-									changedSpriteMeshsKV[childPath] = spriteMeshs[z];
-								}
+				CurveExtension.OptimizesCurve(color_rcurve);
+				CurveExtension.OptimizesCurve(color_gcurve);
+				CurveExtension.OptimizesCurve(color_bcurve);
+				CurveExtension.OptimizesCurve(color_acurve);
+
+				string path="";
+				if(slotPathKV.ContainsKey(slotName)){
+					path = slotPathKV[slotName];
+				}else{
+					path = GetNodeRelativePath(armatureEditor,slotNode);
+					slotPathKV[slotNode.name] = path;
+				}
+
+				if(defaultColorData==null) defaultColorData = new DragonBoneData.ColorData();
+
+				float da = defaultColorData.aM+defaultColorData.a0;
+				float dr = defaultColorData.rM+defaultColorData.r0;
+				float dg = defaultColorData.gM+defaultColorData.g0;
+				float db = defaultColorData.bM+defaultColorData.b0;
+				if(armatureEditor.useUnitySprite)
+				{
+					SpriteRenderer[] sprites = slotNode.GetComponentsInChildren<SpriteRenderer>();
+					if(sprites!=null){
+						for(int z=0;z<sprites.Length;++z){
+							string childPath = path+"/"+sprites[z].name;
+							SetColorCurve<SpriteRenderer>(childPath,clip,color_rcurve,"m_Color.r",isHaveCurve,dr,animSubData.frameDatas);
+							SetColorCurve<SpriteRenderer>(childPath,clip,color_gcurve,"m_Color.g",isHaveCurve,dg,animSubData.frameDatas);
+							SetColorCurve<SpriteRenderer>(childPath,clip,color_bcurve,"m_Color.b",isHaveCurve,db,animSubData.frameDatas);
+							SetColorCurve<SpriteRenderer>(childPath,clip,color_acurve,"m_Color.a",isHaveCurve,da,animSubData.frameDatas);
+						}
+					}
+				}
+				else
+				{
+					SpriteFrame[] sprites = slotNode.GetComponentsInChildren<SpriteFrame>();
+					if(sprites!=null){
+						for(int z=0;z<sprites.Length;++z){
+							string childPath = path+"/"+sprites[z].name;
+							bool anim_r = SetColorCurve<SpriteFrame>(childPath,clip,color_rcurve,"m_color.r",isHaveCurve,dr,animSubData.frameDatas);
+							bool anim_g = SetColorCurve<SpriteFrame>(childPath,clip,color_gcurve,"m_color.g",isHaveCurve,dg,animSubData.frameDatas);
+							bool anim_b = SetColorCurve<SpriteFrame>(childPath,clip,color_bcurve,"m_color.b",isHaveCurve,db,animSubData.frameDatas);
+							bool anim_a = SetColorCurve<SpriteFrame>(childPath,clip,color_acurve,"m_color.a",isHaveCurve,da,animSubData.frameDatas);
+							if(anim_r||anim_g||anim_b||anim_a){
+								changedSpriteFramesKV[childPath] = sprites[z];
 							}
 						}
 					}
 
-					for(int r=0;r<renderCurves.Length;++r){
-						AnimationCurve ac = renderCurves[r];
-						Renderer render = renders[r];
-						float defaultValue = render.enabled? 1: 0;
-						if(ac.keys!=null && ac.keys.Length>0 && CheckCurveValid(ac,defaultValue)){
-							clip.SetCurve(path+"/"+render.name,typeof(GameObject),"m_IsActive",ac);	//m_Enabled
-						}
-					}
-
-					if(isffd && vertexcurvexArray!=null)
-					{
-						for(int k=0;k<vertexcurvexArray.Count;++k){
-							Transform ffdNode = node.GetChild(k);
-							if(ffdNode.name==animSubData.name){
-
-								changedSpriteMeshsKV[path+"/"+ffdNode.name] = ffdNode.GetComponent<SpriteMesh>();
-
-								AnimationCurve[] vertex_xcurves= vertexcurvexArray[k];
-								AnimationCurve[] vertex_ycurves= vertexcurveyArray[k];
-								for(int r=0;r<vertex_xcurves.Length;++r){
-									AnimationCurve vertex_xcurve = vertex_xcurves[r];
-									AnimationCurve vertex_ycurve = vertex_ycurves[r];
-									Transform v = ffdNode.GetChild(r);
-									string ctrlPath = path+"/"+ffdNode.name+"/"+v.name;
-
-									CurveExtension.OptimizesCurve(vertex_xcurve);
-									CurveExtension.OptimizesCurve(vertex_ycurve);
-
-									bool vcurveFlag = false;
-									if(vertex_xcurve.keys !=null&& vertex_xcurve.keys.Length>0&& CheckCurveValid(vertex_xcurve,v.localPosition.x)) vcurveFlag = true;
-									if(vertex_ycurve.keys !=null&& vertex_ycurve.keys.Length>0&& CheckCurveValid(vertex_ycurve,v.localPosition.y)) vcurveFlag=  true;
-									if(vcurveFlag){
-										if(isHaveCurve) SetCustomCurveTangents(vertex_xcurve,animSubData.frameDatas);
-										CurveExtension.UpdateAllLinearTangents(vertex_xcurve);
-										AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( ctrlPath, typeof( Transform ), "m_LocalPosition.x" ), vertex_xcurve );
-										if(isHaveCurve) SetCustomCurveTangents(vertex_ycurve,animSubData.frameDatas);
-										CurveExtension.UpdateAllLinearTangents(vertex_ycurve);
-										AnimationUtility.SetEditorCurve( clip, EditorCurveBinding.FloatCurve( ctrlPath, typeof( Transform ), "m_LocalPosition.y" ), vertex_ycurve );
-									}
-								}
+					SpriteMesh[] spriteMeshs = slotNode.GetComponentsInChildren<SpriteMesh>();
+					if(spriteMeshs!=null){
+						for(int z=0;z<spriteMeshs.Length;++z){
+							string childPath = path+"/"+spriteMeshs[z].name;
+							bool anim_r = SetColorCurve<SpriteMesh>(childPath,clip,color_rcurve,"m_color.r",isHaveCurve,da,animSubData.frameDatas);
+							bool anim_g = SetColorCurve<SpriteMesh>(childPath,clip,color_gcurve,"m_color.g",isHaveCurve,dg,animSubData.frameDatas);
+							bool anim_b = SetColorCurve<SpriteMesh>(childPath,clip,color_bcurve,"m_color.b",isHaveCurve,db,animSubData.frameDatas);
+							bool anim_a = SetColorCurve<SpriteMesh>(childPath,clip,color_acurve,"m_color.a",isHaveCurve,da,animSubData.frameDatas);
+							if(anim_r||anim_g||anim_b||anim_a){
+								changedSpriteMeshsKV[childPath] = spriteMeshs[z];
 							}
 						}
+					}
+				}
 
+				for(int r=0;r<renderCurves.Length;++r){
+					AnimationCurve ac = renderCurves[r];
+					Renderer render = renders[r];
+					float defaultValue = render.enabled? 1: 0;
+					if(ac.keys!=null && ac.keys.Length>0 && CheckCurveValid(ac,defaultValue)){
+						clip.SetCurve(path+"/"+render.name,typeof(GameObject),"m_IsActive",ac);	//m_Enabled
 					}
 				}
 			}

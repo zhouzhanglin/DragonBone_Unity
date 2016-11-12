@@ -22,6 +22,7 @@ namespace DragonBone
 		public float zoffset = 0.003f;
 		public bool useUnitySprite = false; //is used Unity Sprite2D
 		public bool isSingleSprite = false;//is atlas textrue
+		public string texturesFolderName = "";
 
 		[Header("Anim File")]
 		public TextAsset animTextAsset;
@@ -63,6 +64,8 @@ namespace DragonBone
 
 		[HideInInspector]
 		public List<Transform> bones = new List<Transform>();
+		[HideInInspector]
+		public List<Slot> slots = new List<Slot>();
 
 		[MenuItem("DragonBone/DragonBone Panel (All Function)")]
 		static void CreateWizard () {
@@ -78,24 +81,30 @@ namespace DragonBone
 					Dictionary<string,string> textureJsonPathKV = new Dictionary<string, string>();
 					foreach (string path in Directory.GetFiles(dirPath))
 					{  
-						if(System.IO.Path.GetExtension(path) == ".json" && path.IndexOf("texture")>-1 && path.LastIndexOf(".meta")==-1){
-							int start = path.LastIndexOf("/")+1;
-							int end = path.LastIndexOf(".json");
-							textureJsonPathKV[path.Substring(start,end-start)] = path;
-							continue;
+						if(path.LastIndexOf(".meta")==-1){
+							if( System.IO.Path.GetExtension(path) == ".json" && (path.IndexOf("_tex")>-1 || path.IndexOf("texture")>-1) ){
+								int start = path.LastIndexOf("/")+1;
+								int end = path.LastIndexOf(".json");
+								textureJsonPathKV[path.Substring(start,end-start)] = path;
+								continue;
+							}
+							if( System.IO.Path.GetExtension(path) == ".png" && (path.IndexOf("_tex")>-1 || path.IndexOf("texture")>-1) ){
+								int start = path.LastIndexOf("/")+1;
+								int end = path.LastIndexOf(".png");
+								texturePathKV[path.Substring(start,end-start)] = path;
+								continue;
+							}
+							if ( System.IO.Path.GetExtension(path) == ".json" && (path.IndexOf("_ske")>-1 || path.IndexOf("texture.json")==-1)) {
+								animJsonPath = path;
+							}
+
 						}
-						if(System.IO.Path.GetExtension(path) == ".png" && path.IndexOf("texture")>-1 && path.LastIndexOf(".meta")==-1){
-							int start = path.LastIndexOf("/")+1;
-							int end = path.LastIndexOf(".png");
-							texturePathKV[path.Substring(start,end-start)] = path;
-							continue;
-						}
-						if (path.IndexOf("texture.json")==-1 && System.IO.Path.GetExtension(path) == ".json" && path.LastIndexOf(".meta")==-1)  
-						{  
-							animJsonPath = path;
-						}
+
 					} 
-					if(!string.IsNullOrEmpty(animJsonPath) && texturePathKV.Count>0 && textureJsonPathKV.Count>0){
+
+					if(!string.IsNullOrEmpty(animJsonPath)) editor.animTextAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(animJsonPath);
+
+					if( texturePathKV.Count>0 && textureJsonPathKV.Count>0){
 						List<Atlas> atlasList = new List<Atlas>();
 						foreach(string name in texturePathKV.Keys){
 							if(textureJsonPathKV.ContainsKey(name)){
@@ -111,23 +120,21 @@ namespace DragonBone
 							}
 						}
 						editor.otherTextures = atlasList.ToArray();
-						editor.animTextAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(animJsonPath);
 					}
-					else if(!string.IsNullOrEmpty(animJsonPath))
+					else
 					{
-						string spritesPath = null;
-						foreach (string path in Directory.GetDirectories(dirPath))  
-						{  
-							if(path.LastIndexOf("texture")>-1){
-								spritesPath = path;
+						string texturesFolder = "";
+						foreach(string path in Directory.GetDirectories(dirPath)){
+							if(path.IndexOf("texture")>-1){
+								editor.texturesFolderName = path.Substring(path.LastIndexOf("/")+1);
+								texturesFolder = path;
 								break;
 							}
 						}
-						if(!string.IsNullOrEmpty(spritesPath)){
-							string[] paths = Directory.GetFiles(spritesPath);
+						if(!string.IsNullOrEmpty(texturesFolder)){
+							string[] paths = Directory.GetFiles(texturesFolder);
 							if(paths.Length>0){
 								editor.isSingleSprite = true;
-								editor.animTextAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(animJsonPath);
 							}
 						}
 					}
@@ -156,21 +163,22 @@ namespace DragonBone
 					Dictionary<string,string> textureJsonPathKV = new Dictionary<string, string>();
 					foreach (string path in Directory.GetFiles(dirPath))
 					{  
-						if(System.IO.Path.GetExtension(path) == ".json" && path.IndexOf("texture")>-1 && path.LastIndexOf(".meta")==-1){
-							int start = path.LastIndexOf("/")+1;
-							int end = path.LastIndexOf(".json");
-							textureJsonPathKV[path.Substring(start,end-start)] = path;
-							continue;
-						}
-						if(System.IO.Path.GetExtension(path) == ".png" && path.IndexOf("texture")>-1 && path.LastIndexOf(".meta")==-1){
-							int start = path.LastIndexOf("/")+1;
-							int end = path.LastIndexOf(".png");
-							texturePathKV[path.Substring(start,end-start)] = path;
-							continue;
-						}
-						if (path.IndexOf("texture.json")==-1 && System.IO.Path.GetExtension(path) == ".json" && path.LastIndexOf(".meta")==-1)  
-						{  
-							animJsonPath = path;
+						if(path.LastIndexOf(".meta")==-1){
+							if(path.IndexOf("_tex.json")>-1 || (System.IO.Path.GetExtension(path) == ".json" && path.IndexOf("texture.")>-1) ){
+								int start = path.LastIndexOf("/")+1;
+								int end = path.LastIndexOf(".json");
+								textureJsonPathKV[path.Substring(start,end-start)] = path;
+								continue;
+							}
+							if(path.IndexOf("_tex.png")>-1 || (System.IO.Path.GetExtension(path) == ".png" && path.IndexOf("texture.")>-1) ){
+								int start = path.LastIndexOf("/")+1;
+								int end = path.LastIndexOf(".png");
+								texturePathKV[path.Substring(start,end-start)] = path;
+								continue;
+							}
+							if (path.IndexOf("_ske.json")>-1 || ( path.IndexOf("texture.json")==-1 && System.IO.Path.GetExtension(path) == ".json")) {
+								animJsonPath = path;
+							}
 						}
 					} 
 					if(!string.IsNullOrEmpty(animJsonPath) && texturePathKV.Count>0 && textureJsonPathKV.Count>0){
@@ -252,7 +260,7 @@ namespace DragonBone
 			if(useUnitySprite && isSingleSprite && spriteKV.Count==0){
 				string spritesPath = AssetDatabase.GetAssetPath(animTextAsset);
 				spritesPath = spritesPath.Substring(0,spritesPath.LastIndexOf('.'));
-				spritesPath = spritesPath.Substring(0,spritesPath.LastIndexOf('/'))+"/texture";
+				spritesPath = spritesPath.Substring(0,spritesPath.LastIndexOf('/'))+"/"+texturesFolderName;
 				if(Directory.Exists(spritesPath))
 				{
 					foreach (string path in Directory.GetFiles(spritesPath))  
@@ -294,14 +302,16 @@ namespace DragonBone
 			ShowArmature.ShowSkins(this);
 			ShowArmature.SetIKs(this);
 			AnimFile.CreateAnimFile(this);
-			DragonBoneArmature dba = _armature.GetComponent<DragonBoneArmature>();
 
-//			if(dba && (dba.updateMeshs == null || dba.updateMeshs.Length==0) 
-//				&& (dba.updateFrames==null || dba.updateFrames.Length==0)){
-//				Object.DestroyImmediate(dba);
-//			}
+			DragonBoneArmature dba = _armature.GetComponent<DragonBoneArmature>();
+			bool canDeleteArmature = false;
+			if(armature && (dba.updateMeshs == null || dba.updateMeshs.Length==0) 
+				&& (dba.updateFrames==null || dba.updateFrames.Length==0)){
+				canDeleteArmature= true;
+			}
 
 			Renderer[] renders = _armature.GetComponentsInChildren<Renderer>();
+			List<SpriteMesh> sms = new List<SpriteMesh>();
 			foreach(Renderer r in renders){
 				if(!r.enabled){
 					r.enabled = true;
@@ -312,24 +322,25 @@ namespace DragonBone
 					for(int i=0;i<r.transform.childCount;++i){
 						r.transform.GetChild(i).gameObject.SetActive(false);
 					}
+					sms.Add(r.GetComponent<SpriteMesh>());
+					canDeleteArmature = false;
 				}
 				else if(r.GetComponent<SpriteFrame>()){
 					//optimize memory
 					SpriteFrame sf = r.GetComponent<SpriteFrame>();
-					SpriteFrame.TextureFrame tf = sf.frame;
-					sf.frames=new SpriteFrame.TextureFrame[]{tf};
+					TextureFrame tf = sf.frame;
+					sf.frames=new TextureFrame[]{tf};
 				}
 			}
-			dba.attachments = renders;
-
-			//set slots
-			Transform[] slots = new Transform[slotsKV.Count];
-			int j =0 ;
-			foreach(Transform slot in slotsKV.Values){
-				slots[j] = slot;
-				++j;
+			if(canDeleteArmature){
+//				Object.DestroyImmediate(dba);//don't destroy
+			}else{
+				dba.updateMeshs = sms.ToArray();
 			}
-			dba.slots = slots;
+			dba.attachments = renders;
+			dba.slots = slots.ToArray();
+			dba.zSpace = zoffset;
+			dba.ResetSlotZOrder();
 
 			string path = AssetDatabase.GetAssetPath(animTextAsset);
 			path = path.Substring(0,path.LastIndexOf('/'))+"/"+_armature.name+".prefab";

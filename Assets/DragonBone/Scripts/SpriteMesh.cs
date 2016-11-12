@@ -8,7 +8,7 @@ namespace DragonBone
 {
 	/// <summary>
 	/// Sprite mesh.
-	/// author:  bingheliefeng
+	/// author:bingheliefeng
 	/// </summary>
 	[ExecuteInEditMode]
 	public class SpriteMesh : MonoBehaviour {
@@ -41,6 +41,7 @@ namespace DragonBone
 		public Vector2[] uvs;
 		public Color[] colors;//vertex color
 		public int[] triangles;
+		public int[] edges;
 
 		public BoneWeightClass[] weights;//for skinnedMesh
 		public Matrix4x4[] bindposes; //for skinnedMesh
@@ -48,6 +49,19 @@ namespace DragonBone
 
 		//	public Vector2 pivot;
 		public Material atlasMat;
+
+		[HideInInspector]
+		public TextureFrame frame;
+
+//		[SerializeField]
+//		private Vector2 m_uvOffset;
+//		public Vector2 uvOffset{
+//			get { return m_uvOffset; }
+//			set{
+//				m_uvOffset = value;
+//				if(m_createdMesh) UpdateUV();
+//			}
+//		}
 
 		[Range(0f,1f)]
 		[SerializeField]
@@ -65,7 +79,7 @@ namespace DragonBone
 		public Color color{
 			get { return __Color;}
 			set { 
-				if(!__Color.Equals(value) || !m_color.Equals(value)){
+				if(!__Color.Equals(value)  || m_color.Equals(value)){
 					m_color = value; 
 					__Color = value;
 					if(m_createdMesh)	UpdateVertexColor();
@@ -104,6 +118,15 @@ namespace DragonBone
 		}
 		private Renderer m_render;
 
+
+		[HideInInspector]
+		[SerializeField]
+		private PolygonCollider2D m_collder;
+
+		[HideInInspector]
+		[SerializeField]
+		private Vector2[] m_collider_points;
+
 		void Start(){
 			if(m_createdMesh && m_mesh==null){
 				this.CreateMesh(m_isSkinnedMeshRenderer);
@@ -119,8 +142,13 @@ namespace DragonBone
 			if(vertices!=null && uvs!=null && colors!=null && triangles!=null){
 				if(m_mesh==null) m_mesh = new Mesh();
 				m_mesh.vertices = vertices;
-				m_mesh.uv = uvs;
+				UpdateUV();
 				m_mesh.triangles = triangles;
+				if(edges!=null && edges.Length>0 && m_collder==null){
+					m_collder = GetComponent<PolygonCollider2D>();
+					if(m_collder==null) m_collder = gameObject.AddComponent<PolygonCollider2D>();
+					UpdateEdges();
+				}
 				UpdateVertexColor();
 				m_mesh.RecalculateNormals();
 				m_mesh.RecalculateBounds();
@@ -170,6 +198,31 @@ namespace DragonBone
 			return null;
 		}
 
+		public void UpdateUV(){
+			if(m_mesh && frame!=null && uvs!=null){
+				//uv to Atlas
+				Vector2[] tempUvs = new Vector2[uvs.Length] ;
+				for(int i=0;i<uvs.Length;++i){
+					Vector2 uv=uvs[i];
+					if(frame.isRotated){
+						float x = uv.y*frame.rect.width;
+						float y = frame.rect.height - uv.x*frame.rect.height;
+						uv.x = 1-x/frame.rect.width;
+						uv.y = 1-y/frame.rect.height;
+					}
+					Vector2 uvPos = new Vector2(frame.rect.x,frame.atlasTextureSize.y-frame.rect.y-frame.rect.height)+ 
+						new Vector2(frame.rect.width*uv.x,frame.rect.height*uv.y);
+					uv.x = uvPos.x/frame.atlasTextureSize.x;
+					uv.y = uvPos.y/frame.atlasTextureSize.y;
+					tempUvs[i] = uv;
+				}
+//				for(int i=0;i<tempUvs.Length;++i){
+//					tempUvs[i] = tempUvs[i]-m_uvOffset;
+//				}
+				m_mesh.uv = tempUvs;
+			}
+		}
+
 		public void UpdateVertexColor(){
 			if(m_mesh){
 				Color col = m_color*(Mathf.Clamp(m_brightness,0f,1f)*10f+1f);
@@ -196,15 +249,15 @@ namespace DragonBone
 				}
 				m_mesh.vertices=vertices;
 
-				m_mesh.uv=uvs;
+				UpdateUV();
 				m_mesh.triangles=triangles;
+				UpdateEdges();
 				UpdateVertexColor();
 				UpdateSorting();
 				m_mesh.RecalculateBounds();
 			}
 		}
 		#endif
-
 
 		public void UpdateMesh(){
 			if(m_createdMesh && m_mesh){
@@ -216,13 +269,50 @@ namespace DragonBone
 					m_mesh.vertices=vertices;
 				}
 				color = m_color;
+				UpdateEdges();
 			}
 		}
 
+		public void UpdateEdges(){
+			if(m_collder!=null && edges!=null && edges.Length>0){
+				int len = edges.Length;
+				if(m_collider_points==null) m_collider_points = new Vector2[len];
+
+				SkinnedMeshRenderer smr = m_render as SkinnedMeshRenderer;
+				for(int i=0;i<len;++i){
+					int vIndex = edges[i];
+					Vector3 v = vertices[vIndex]; //local vertex
+
+					if(m_isSkinnedMeshRenderer && weights!=null){
+						BoneWeightClass bw = weights[vIndex];
+						Matrix4x4[] boneMatrices = new Matrix4x4[smr.bones.Length];
+						for (int j= 0; j< boneMatrices.Length; ++j)
+							boneMatrices[j] = smr.bones[j].localToWorldMatrix * mesh.bindposes[j];
+
+						Matrix4x4 bm0 = boneMatrices[bw.boneIndex0];
+						Matrix4x4 bm1 = boneMatrices[bw.boneIndex1];
+						Matrix4x4 bm2 = boneMatrices[bw.boneIndex2];
+						Matrix4x4 bm3 = boneMatrices[bw.boneIndex3];
+
+						Matrix4x4 vertexMatrix = new Matrix4x4();
+						for (int n= 0; n < 16; ++n){
+							vertexMatrix[n] =
+								bm0[n] * bw.weight0 +
+								bm1[n] * bw.weight1 +
+								bm2[n] * bw.weight2 +
+								bm3[n] * bw.weight3;
+						}
+						v = transform.InverseTransformPoint( vertexMatrix.MultiplyPoint3x4(v));
+					}
+					m_collider_points[i] = (Vector2)v;
+				}
+				m_collder.points = m_collider_points;
+			}
+		}
 
 		#if UNITY_EDITOR
 		void OnDrawGizmos(){
-			if(vertControlTrans!=null && m_mesh && Selection.activeTransform){
+			if(vertControlTrans!=null && m_mesh && (weights==null || weights.Length==0) && Selection.activeTransform){
 				if(Selection.activeTransform==this.transform|| Selection.activeTransform.parent==this.transform){
 					Gizmos.color = Color.red;
 					if(vertControlTrans!=null){
@@ -235,5 +325,4 @@ namespace DragonBone
 		}
 		#endif
 	}
-
 }

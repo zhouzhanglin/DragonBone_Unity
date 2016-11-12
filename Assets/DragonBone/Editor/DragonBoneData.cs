@@ -23,6 +23,7 @@ namespace DragonBone
 			public int displayIndex=0;
 			public float z;
 			public float scale =1f;//缩放值，默认为1
+			public string blendMode = "normal";
 			public ColorData color;
 		}
 		public class IKData{
@@ -65,6 +66,7 @@ namespace DragonBone
 			public AnimSubData[] boneDatas;
 			public AnimSubData[] slotDatas;
 			public AnimSubData[] ffdDatas;
+			public AnimSubData[] zOrderDatas;
 		}
 		public class AnimKeyData{ //此动画包含的关键帧数据
 			public int duration = 1;
@@ -75,7 +77,6 @@ namespace DragonBone
 		public class AnimSubData{
 			public string name;//slotname , bone name
 			public string slot;//如果有slot，就用slot
-			public int duration = 1;
 			public float scale=1f;
 			public float offset=0f;
 			public AnimFrameData[] frameDatas;
@@ -83,6 +84,7 @@ namespace DragonBone
 		public class AnimFrameData { //此动画包含的关键帧列表
 			public int duration = 1;
 			public float[] curve;
+			public int[] zOrder;
 			public float tweenEasing=float.PositiveInfinity;
 			public int displayIndex=0;
 			public float z;
