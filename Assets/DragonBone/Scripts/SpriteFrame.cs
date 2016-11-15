@@ -216,8 +216,8 @@ namespace DragonBone
 				UpdateUV();
 				UpdateVertexColor();
 				m_mesh.RecalculateBounds();
+				m_mesh.normals=m_normals;
 			}
-			m_mesh.normals=m_normals;
 		}
 		#endif
 
