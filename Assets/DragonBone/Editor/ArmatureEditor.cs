@@ -62,6 +62,8 @@ namespace DragonBone
 		public Dictionary<string,Matrix2D> bonePoseKV = new Dictionary<string, Matrix2D>() ; //bonePose , key is bone name
 		public Dictionary<string,bool> ffdKV = new Dictionary<string, bool>();//skinnedMesh animation or ffd animation, key is skin name/texture name
 
+		public Dictionary<Material,bool> spriteMeshUsedMatKV = new Dictionary<Material, bool>();
+
 		[HideInInspector]
 		public List<Transform> bones = new List<Transform>();
 		[HideInInspector]

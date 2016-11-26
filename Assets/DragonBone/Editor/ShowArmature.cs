@@ -360,7 +360,9 @@ namespace DragonBone
 						{
 							//can delete safely
 							foreach(Material mat in matKV.Values){
-								AssetDatabase.DeleteAsset( AssetDatabase.GetAssetPath(mat));
+								if(!armatureEditor.spriteMeshUsedMatKV.ContainsKey(mat)){
+									AssetDatabase.DeleteAsset( AssetDatabase.GetAssetPath(mat));
+								}
 							}
 						}
 						else
@@ -444,7 +446,7 @@ namespace DragonBone
 		}
 
 		static void ShowSpriteMesh(TextureFrame frame,Material mat,DragonBoneData.SkinSlotDisplayData displayData,Transform slot,ArmatureEditor armatureEditor,DragonBoneData.SlotData slotData){
-	
+			armatureEditor.spriteMeshUsedMatKV[mat] = true;
 			GameObject go = new GameObject(displayData.textureName);
 			SpriteMesh sm = go.AddComponent<SpriteMesh>();
 			sm.atlasMat = mat;
