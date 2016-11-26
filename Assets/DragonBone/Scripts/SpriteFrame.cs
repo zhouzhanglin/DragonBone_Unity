@@ -176,7 +176,8 @@ namespace DragonBone
 				this.CreateQuad();
 				this.frameName = m_frameName;
 			}
-			m_mesh.normals = m_normals;
+			if(m_mesh)
+				m_mesh.normals = m_normals;
 		}
 
 		void OnEnable(){
