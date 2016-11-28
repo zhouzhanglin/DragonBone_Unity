@@ -20,8 +20,7 @@ namespace DragonBone
 		public Material[] materials;
 		public TextureFrame[] textureFrames;
 
-		private List<Slot> m_ZOrderSlots;
-		private bool m_zOrderInvalid = false;
+		private List<Slot> m_OrderSlots = new List<Slot>();
 
 		private Animator m_animator;
 		public Animator aniamtor{
@@ -181,31 +180,43 @@ namespace DragonBone
 
 		//after animation frame
 		void LateUpdate(){
-			if(m_animator!=null && m_animator.enabled && m_ZOrderSlots!=null)
+			if(m_animator!=null && m_animator.enabled && m_OrderSlots.Count>0)
 			{
-				if(m_zOrderInvalid){
-					//reset zspace
-					int len = m_ZOrderSlots.Count;
-
-					float zoff = m_FlipX || m_FlipY ? 1f : -1f;
-					if(m_FlipX && m_FlipY) zoff = -1f;
-					zoff*=zSpace;
-
-					for(int i=0;i<len;++i){
-						Slot slot = m_ZOrderSlots[i];
-						if(slot && slot.isActiveAndEnabled ){
-							Vector3 v = slot.transform.localPosition;
-							v.z = zoff*i+zoff*0.00001f;
-							slot.transform.localPosition = v;
+				int len = slots.Length;
+				Slot[] newSlots = new Slot[len];
+				for ( int i = 0; i < m_OrderSlots.Count ;++i ) {
+					Slot slot = m_OrderSlots[ i ];
+					int newIdx = slot.zOrder+slot.z;
+					newSlots[ newIdx ] = slot;
+					slots[ slot.zOrder ]._zOrderValid = true;
+				}
+				int pos = 0;
+				for ( int i = 0; i< len; ++i ) {
+					Slot newSlot = newSlots[ i ];
+					if ( newSlot==null ) {
+						for ( ; pos != len; ) {
+							if ( !slots[ pos ]._zOrderValid ) {
+								newSlots[ i ] = slots[ pos ];
+								++pos;
+								break;
+							} else ++pos;
 						}
 					}
-					m_zOrderInvalid = false;
-
-					//resume
-					m_ZOrderSlots.Sort(delegate(Slot x, Slot y) {
-						return x.zOrder-y.zOrder;
-					});
 				}
+
+				//set new order
+				float zoff = m_FlipX || m_FlipY ? 1f : -1f;
+				if(m_FlipX && m_FlipY) zoff = -1f;
+				zoff*=zSpace;
+				for ( int j = 0; j < len; ++j ) {
+					Slot slot = newSlots[j];
+					Vector3 v = slot.transform.localPosition;
+					v.z = zoff*j+zoff*0.00001f;
+					slot.transform.localPosition = v;
+					slot._zOrderValid = false;
+				}
+
+				m_OrderSlots.Clear();
 			}
 		}
 
@@ -261,11 +272,7 @@ namespace DragonBone
 		/// </summary>
 		/// <param name="slot">Slot.</param>
 		public void UpdateSlotZOrder(Slot slot){
-			if(m_ZOrderSlots==null) m_ZOrderSlots = new List<Slot>(slots);
-			m_ZOrderSlots.Remove(slot);
-			m_ZOrderSlots.Insert(slot.zOrder+slot.z,slot);
-
-			m_zOrderInvalid = true;
+			m_OrderSlots.Add(slot);
 		}
 
 	}

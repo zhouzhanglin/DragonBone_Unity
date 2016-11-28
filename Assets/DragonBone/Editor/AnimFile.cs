@@ -173,6 +173,23 @@ namespace DragonBone
 							curve.AddKey( new Keyframe(during,changeZ,float.PositiveInfinity,float.PositiveInfinity));
 						}
 					}
+					else
+					{
+						//set to default z
+						for(int z=0;z<armatureEditor.slots.Count;++z){
+							Slot slot = armatureEditor.slots[z];
+							string path = "";
+							if(slotPathKV.ContainsKey(slot.name)){
+								path = slotPathKV[slot.name];
+							}else{
+								path = GetNodeRelativePath(armatureEditor,slot.transform) ;
+								slotPathKV[slot.name] = path;
+							}
+							if(slotZOrderKV.ContainsKey(slot.name)){
+								slotZOrderKV[slot.name].AddKey( new Keyframe(during,0,float.PositiveInfinity,float.PositiveInfinity));
+							}
+						}
+					}
 					during+= frameData.duration*perKeyTime;
 				}
 				foreach(string name in slotZOrderKV.Keys)

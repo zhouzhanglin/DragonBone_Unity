@@ -21,6 +21,7 @@ namespace DragonBone
 
 		[HideInInspector]
 		public int zOrder;//default z order
+		protected internal bool _zOrderValid = false;
 
 		private int __z;
 		[HideInInspector]
