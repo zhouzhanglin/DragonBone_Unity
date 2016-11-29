@@ -210,10 +210,12 @@ namespace DragonBone
 				zoff*=zSpace;
 				for ( int j = 0; j < len; ++j ) {
 					Slot slot = newSlots[j];
-					Vector3 v = slot.transform.localPosition;
-					v.z = zoff*j+zoff*0.00001f;
-					slot.transform.localPosition = v;
-					slot._zOrderValid = false;
+					if(slot){
+						Vector3 v = slot.transform.localPosition;
+						v.z = zoff*j+zoff*0.00001f;
+						slot.transform.localPosition = v;
+						slot._zOrderValid = false;
+					}
 				}
 
 				m_OrderSlots.Clear();
