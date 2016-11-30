@@ -28,9 +28,7 @@ namespace DragonBone
 		[SerializeField]
 		private float m_z;
 		public int z{
-			get {
-				return __z;
-			}
+			get { return __z; }
 		}
 
 		[SerializeField]
@@ -156,6 +154,9 @@ namespace DragonBone
 
 		void Start(){
 			blendMode = m_blendMode;
+			__z = zOrder;
+			m_z = zOrder;
+
 		}
 
 	}
