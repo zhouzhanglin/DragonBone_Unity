@@ -25,7 +25,10 @@ namespace DragonBone
 
 		private Animator m_animator;
 		public Animator aniamtor{
-			get { return m_animator; } 
+			get { 
+				if(m_animator==null) m_animator = gameObject.GetComponent<Animator>();
+				return m_animator;
+			} 
 		}
 
 		[SerializeField]
@@ -162,33 +165,24 @@ namespace DragonBone
 			return angle;
 		}
 
-		void Awake(){
-			m_animator=GetComponent<Animator>();
-		}
-
-		// Use this for initialization
-		void Start () {
-
-		}
-
 		// Update is called once per frame
 		void Update () {
 			#if UNITY_EDITOR
 			if(Application.isPlaying){
-				if(m_animator!=null && m_animator.enabled)
+				if(aniamtor!=null && aniamtor.enabled)
 				{
 					UpdateArmature();
 				}
 			}
 			else
 			{
-				if(m_animator!=null)
+				if(aniamtor!=null)
 				{
 					UpdateArmature();
 				}
 			}
 			#else
-			if(m_animator!=null && m_animator.enabled)
+			if(aniamtor!=null && aniamtor.enabled)
 			{
 				UpdateArmature();
 			}
@@ -197,7 +191,7 @@ namespace DragonBone
 
 		//after animation frame
 		void LateUpdate(){
-			if(m_animator!=null && m_OrderSlots.Count>0)
+			if(aniamtor!=null && m_OrderSlots.Count>0)
 			{
 				int len = slots.Length;
 				Slot[] newSlots = new Slot[len];
