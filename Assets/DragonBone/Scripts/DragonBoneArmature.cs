@@ -4,10 +4,11 @@ using System.Collections.Generic;
 
 namespace DragonBone
 {
+	[ExecuteInEditMode]
 	public class DragonBoneArmature : MonoBehaviour {
 
 		[Range(0.0001f,1f)]
-		public float zSpace = 0.003f;
+		public float zSpace = 0.001f;
 		[SerializeField]
 		private bool m_FlipX;
 		[SerializeField]
@@ -172,15 +173,31 @@ namespace DragonBone
 
 		// Update is called once per frame
 		void Update () {
+			#if UNITY_EDITOR
+			if(Application.isPlaying){
+				if(m_animator!=null && m_animator.enabled)
+				{
+					UpdateArmature();
+				}
+			}
+			else
+			{
+				if(m_animator!=null)
+				{
+					UpdateArmature();
+				}
+			}
+			#else
 			if(m_animator!=null && m_animator.enabled)
 			{
 				UpdateArmature();
 			}
+			#endif
 		}
 
 		//after animation frame
 		void LateUpdate(){
-			if(m_animator!=null && m_animator.enabled && m_OrderSlots.Count>0)
+			if(m_animator!=null && m_OrderSlots.Count>0)
 			{
 				int len = slots.Length;
 				Slot[] newSlots = new Slot[len];
