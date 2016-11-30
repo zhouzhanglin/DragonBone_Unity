@@ -60,6 +60,9 @@ namespace DragonBone
 						}
 					}
 				}
+				if (!string.IsNullOrEmpty(armature.gameObject.scene.name)){
+					UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+				}
 			}
 
 			serializedObject.Update();
@@ -77,14 +80,23 @@ namespace DragonBone
 			if(armature.flipX!=flipX){
 				armature.flipX = armature.flipX;
 				flipX = armature.flipX;
+				if (!string.IsNullOrEmpty(armature.gameObject.scene.name)){
+					UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+				}
 			}
 			if(armature.flipY!=flipY){
 				armature.flipY = armature.flipY;
 				flipY = armature.flipY;
+				if (!string.IsNullOrEmpty(armature.gameObject.scene.name)){
+					UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+				}
 			}
 			if(armature.zSpace!=zspace){
 				zspace = armature.zSpace;
 				armature.ResetSlotZOrder();
+				if (!string.IsNullOrEmpty(armature.gameObject.scene.name)){
+					UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+				}
 			}
 		}
 
