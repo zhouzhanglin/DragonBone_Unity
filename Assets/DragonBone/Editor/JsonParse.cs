@@ -49,9 +49,12 @@ namespace DragonBone
 
 				SimpleJSON.JSONClass armtureObj = armtureArr[i].AsObject;
 				if(armtureObj.ContainKey("name")){
-					string armatureName = armtureObj["name"].ToString();
+					string armatureName = armtureObj["name"].ToString().Trim();
 					armatureEditor.armature.name = armatureName;
 					ParseArmtureData(armatureEditor,armtureObj);
+				}
+				if(armtureObj.ContainKey("type")){
+					armatureEditor.armatureData.type = armtureObj["type"].ToString();
 				}
 				if(armtureObj.ContainKey("frameRate")){
 					armatureEditor.armatureData.frameRate = armtureObj["frameRate"].AsFloat;
@@ -96,13 +99,16 @@ namespace DragonBone
 			if(armtureObj.ContainKey("slot")){
 				SimpleJSON.JSONArray slots = armtureObj["slot"].AsArray;
 				DragonBoneData.SlotData[] slotDatas = new DragonBoneData.SlotData[slots.Count];
+				bool isMC = armatureEditor.armatureData.type.Equals("MovieClip");
 				for(int i=0;i<slots.Count;++i){
 					SimpleJSON.JSONClass slotObj = slots[i].AsObject;
 					DragonBoneData.SlotData slotData=new DragonBoneData.SlotData();
 					if(slotObj.ContainKey("name"))  slotData.name = slotObj["name"].ToString();
 					if(slotObj.ContainKey("parent"))  slotData.parent = slotObj["parent"].ToString();
 					if(slotObj.ContainKey("z"))  slotData.z = -slotObj["z"].AsFloat*armatureEditor.zoffset;
-					if(slotObj.ContainKey("displayIndex")) slotData.displayIndex = slotObj["displayIndex"].AsInt;
+					if(!isMC){
+						if(slotObj.ContainKey("displayIndex")) slotData.displayIndex = slotObj["displayIndex"].AsInt;
+					}
 					if(slotObj.ContainKey("scale")) slotData.scale = slotObj["scale"].AsFloat;
 					if(slotObj.ContainKey("blendMode")) slotData.blendMode = slotObj["blendMode"].ToString();
 					if(slotObj.ContainKey("color"))

@@ -122,6 +122,7 @@ namespace DragonBone
 		}
 		public class ArmatureData{
 			public string name;
+			public string type="Armature";//MovieClip
 			public int isGlobal = 0 ;
 			public float frameRate = 24 ;
 			public BoneData[] boneDatas;
