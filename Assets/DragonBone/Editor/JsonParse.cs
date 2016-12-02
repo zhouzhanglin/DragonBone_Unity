@@ -51,7 +51,6 @@ namespace DragonBone
 				if(armtureObj.ContainKey("name")){
 					string armatureName = armtureObj["name"].ToString().Trim();
 					armatureEditor.armature.name = armatureName;
-					ParseArmtureData(armatureEditor,armtureObj);
 				}
 				if(armtureObj.ContainKey("type")){
 					armatureEditor.armatureData.type = armtureObj["type"].ToString();
@@ -60,6 +59,7 @@ namespace DragonBone
 					armatureEditor.armatureData.frameRate = armtureObj["frameRate"].AsFloat;
 					if(armatureEditor.armatureData.frameRate==0) armatureEditor.armatureData.frameRate = 24;//db默认为24
 				}
+				ParseArmtureData(armatureEditor,armtureObj);
 				armatureEditor.InitShow();
 			}
 
