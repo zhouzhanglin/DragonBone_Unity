@@ -237,7 +237,7 @@ namespace DragonBone
 		}
 
 		public void UpdateUV(){
-			if(m_mesh!=null && atlasMat && atlasMat.mainTexture && m_frame!=null && m_frame.atlasTextureSize.x>1 && m_frame.atlasTextureSize.y>1){
+			if(m_mesh!=null && m_frame!=null && m_frame.atlasTextureSize.x>1 && m_frame.atlasTextureSize.y>1){
 				Vector2[] rectUV = new Vector2[]{
 					new Vector2(m_rect.x,  m_frame.atlasTextureSize.y-m_rect.y-m_rect.height),
 					new Vector2(m_rect.x,  m_frame.atlasTextureSize.y-m_rect.y),
