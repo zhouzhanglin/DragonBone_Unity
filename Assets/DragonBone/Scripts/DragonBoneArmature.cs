@@ -189,41 +189,59 @@ namespace DragonBone
 			#endif
 		}
 
-		//after animation frame
+		/// <summary>
+		/// Lates the update. Sort slot
+		/// </summary>
 		void LateUpdate(){
-			if(aniamtor!=null && m_OrderSlots.Count>0)
+			int orderCount = m_OrderSlots.Count;
+			if(aniamtor!=null && orderCount>0)
 			{
-				int len = slots.Length;
-				Slot[] newSlots = new Slot[len];
-				for ( int i = 0; i < m_OrderSlots.Count ;++i ) {
-					Slot slot = m_OrderSlots[ i ];
-					int newIdx = slot.zOrder+slot.z;
-					newSlots[ newIdx ] = slot;
-					slots[ slot.zOrder ]._zOrderValid = true;
+				int slotCount = slots.Length;
+				int[] unchanged = new int[slotCount - orderCount];
+
+				int[] newSlots = new int[slotCount];
+				for (int i = 0; i < slotCount; ++i){
+					newSlots[i] = -1;
 				}
-				int pos = 0;
-				for ( int i = 0; i< len; ++i ) {
-					Slot newSlot = newSlots[ i ];
-					if ( newSlot==null ) {
-						for ( ; pos != len; ) {
-							if ( !slots[ pos ]._zOrderValid ) {
-								newSlots[ i ] = slots[ pos ];
-								++pos;
-								break;
-							} else ++pos;
-						}
+
+				int originalIndex = 0;
+				int unchangedIndex = 0;
+				for (int i = 0; i<orderCount ; ++i)
+				{
+					Slot slot = m_OrderSlots[i];
+					int slotIndex = slot.zOrder;
+					int offset = slot.z;
+
+					while (originalIndex != slotIndex)
+					{
+						unchanged[unchangedIndex++] = originalIndex++;
+					}
+					newSlots[originalIndex + offset] = originalIndex++;
+				}
+
+				while (originalIndex < slotCount)
+				{
+					unchanged[unchangedIndex++] = originalIndex++;
+				}
+
+				int iC = slotCount;
+				while (iC-- != 0)
+				{
+					if (newSlots[iC] == -1)
+					{
+						newSlots[iC] = unchanged[--unchangedIndex];
 					}
 				}
 
-				//set new order
+				//set order
 				float zoff = m_FlipX || m_FlipY ? 1f : -1f;
 				if(m_FlipX && m_FlipY) zoff = -1f;
 				zoff*=zSpace;
-				for ( int j = 0; j < len; ++j ) {
-					Slot slot = newSlots[j];
+				for(int i=0;i<slotCount;++i){
+					Slot slot = slots[newSlots[i]];
 					if(slot){
 						Vector3 v = slot.transform.localPosition;
-						v.z = zoff*j+zoff*0.00001f;
+						v.z = zoff*i+zoff*0.00001f;
 						slot.transform.localPosition = v;
 						slot._zOrderValid = false;
 					}
@@ -285,7 +303,8 @@ namespace DragonBone
 		/// </summary>
 		/// <param name="slot">Slot.</param>
 		public void UpdateSlotZOrder(Slot slot){
-			m_OrderSlots.Add(slot);
+			if(slot.z!=0)
+				m_OrderSlots.Add(slot);
 		}
 
 	}
