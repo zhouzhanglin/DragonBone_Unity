@@ -9,5 +9,5 @@ Dragon Bone是一款免费的动画制作工具，下载地址[http://dragonbone
 由于unity动画限制，所以此插件不支持nonInheritRotations，nonInheritScales (也就是DragonBone编辑器里这两个属性必须勾选)<br/>
 #注意事项
 在龙骨做绑定时，同一层级的骨骼和插槽名称不能相同<br/>
-导出动画需要用相对坐标<br/>
+如果动画中用了显示和隐藏，动态更新渲染顺序这两个功能，两个动画之间不能添加时间过渡，否则显示和隐藏动画会很奇怪，动态更新ZOrder动画则会报错<br/>
 如果你只想使用spine的运行库，可以使用[DragonBoneToSpineData](http://git.oschina.net/bingheliefeng/DragonBoneToSpineData)
