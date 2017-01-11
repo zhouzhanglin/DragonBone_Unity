@@ -22,6 +22,7 @@ namespace DragonBone
 		public TextureFrame[] textureFrames;
 
 		private List<Slot> m_OrderSlots = new List<Slot>();
+		private int[] m_NewSlotOrders = null ;
 
 		private Animator m_animator;
 		public Animator aniamtor{
@@ -199,9 +200,11 @@ namespace DragonBone
 				int slotCount = slots.Length;
 				int[] unchanged = new int[slotCount - orderCount];
 
-				int[] newSlots = new int[slotCount];
+				if(m_NewSlotOrders==null){
+					m_NewSlotOrders = new int[slotCount];
+				}
 				for (int i = 0; i < slotCount; ++i){
-					newSlots[i] = -1;
+					m_NewSlotOrders[i] = -1;
 				}
 
 				int originalIndex = 0;
@@ -216,7 +219,7 @@ namespace DragonBone
 					{
 						unchanged[unchangedIndex++] = originalIndex++;
 					}
-					newSlots[originalIndex + offset] = originalIndex++;
+					m_NewSlotOrders[originalIndex + offset] = originalIndex++;
 				}
 
 				while (originalIndex < slotCount)
@@ -227,9 +230,9 @@ namespace DragonBone
 				int iC = slotCount;
 				while (iC-- != 0)
 				{
-					if (newSlots[iC] == -1)
+					if (m_NewSlotOrders[iC] == -1)
 					{
-						newSlots[iC] = unchanged[--unchangedIndex];
+						m_NewSlotOrders[iC] = unchanged[--unchangedIndex];
 					}
 				}
 
@@ -238,7 +241,7 @@ namespace DragonBone
 				if(m_FlipX && m_FlipY) zoff = -1f;
 				zoff*=zSpace;
 				for(int i=0;i<slotCount;++i){
-					Slot slot = slots[newSlots[i]];
+					Slot slot = slots[m_NewSlotOrders[i]];
 					if(slot){
 						Vector3 v = slot.transform.localPosition;
 						v.z = zoff*i+zoff*0.00001f;
