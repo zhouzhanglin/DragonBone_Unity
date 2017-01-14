@@ -23,6 +23,8 @@ namespace DragonBone
 
 		private List<Slot> m_OrderSlots = new List<Slot>();
 		private int[] m_NewSlotOrders = null ;
+		[SerializeField]
+		private bool m_ZOrderValid = false;
 
 		private Animator m_animator;
 		public Animator aniamtor{
@@ -251,6 +253,11 @@ namespace DragonBone
 				}
 
 				m_OrderSlots.Clear();
+			}
+			else if(m_ZOrderValid)
+			{
+				m_ZOrderValid = false;
+				ResetSlotZOrder();
 			}
 		}
 

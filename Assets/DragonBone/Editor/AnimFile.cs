@@ -131,6 +131,7 @@ namespace DragonBone
 		{
 			if(subDatas==null) return;
 			int len = subDatas.Length;
+			AnimationCurve armatureCurve = new AnimationCurve();
 			float perKeyTime = 1f/armatureEditor.armatureData.frameRate;
 			for(int i=0;i<len;++i){
 				DragonBoneData.AnimSubData animSubData = subDatas[i];
@@ -175,20 +176,8 @@ namespace DragonBone
 					}
 					else
 					{
-						//set to default z
-						for(int z=0;z<armatureEditor.slots.Count;++z){
-							Slot slot = armatureEditor.slots[z];
-							string path = "";
-							if(slotPathKV.ContainsKey(slot.name)){
-								path = slotPathKV[slot.name];
-							}else{
-								path = GetNodeRelativePath(armatureEditor,slot.transform) ;
-								slotPathKV[slot.name] = path;
-							}
-							if(slotZOrderKV.ContainsKey(slot.name)){
-								slotZOrderKV[slot.name].AddKey( new Keyframe(during,0,float.PositiveInfinity,float.PositiveInfinity));
-							}
-						}
+						//set Armature zorder invalid
+						armatureCurve.AddKey(new Keyframe(during,1,float.PositiveInfinity,float.PositiveInfinity));
 					}
 					during+= frameData.duration*perKeyTime;
 				}
@@ -201,6 +190,9 @@ namespace DragonBone
 					if(zOrderCurve!=null && zOrderCurve.keys!=null && zOrderCurve.keys.Length>0 && CheckCurveValid(zOrderCurve,slot.zOrder)){
 						clip.SetCurve(slotPathKV[name],typeof(Slot),"m_z",zOrderCurve);
 					}
+				}
+				if(armatureCurve.keys.Length>0){
+					clip.SetCurve("/"+armatureEditor.armature.name,typeof(DragonBoneArmature),"m_ZOrderValid",armatureCurve);
 				}
 			}
 		}
