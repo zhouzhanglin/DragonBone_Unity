@@ -401,6 +401,7 @@ namespace DragonBone
 						if(frameObj.ContainKey("displayIndex")) frameData.displayIndex = frameObj["displayIndex"].AsInt;
 						if(frameObj.ContainKey("z")) frameData.z = -frameObj["z"].AsInt*armatureEditor.zoffset;
 						if(frameObj.ContainKey("tweenEasing") && frameObj["tweenEasing"].ToString()!="null") frameData.tweenEasing = frameObj["tweenEasing"].AsFloat;
+						if(frameObj.ContainKey("tweenRotate")) frameData.tweenRotate = frameObj["tweenRotate"].AsInt;
 						if(frameObj.ContainKey("curve")){
 							SimpleJSON.JSONArray curves = frameObj["curve"].AsArray;
 							frameData.curve = new float[4]{curves[0].AsFloat,curves[1].AsFloat,curves[2].AsFloat,curves[3].AsFloat};

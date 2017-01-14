@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 //http://wiki.unity3d.com/index.php/EditorAnimationCurveExtension
 namespace CurveExtended{
@@ -60,20 +61,29 @@ namespace CurveExtended{
 		public static void ClampCurveRotate360(AnimationCurve rotatecurve){
 			if(rotatecurve.length>1){
 				for(int f=1;f<rotatecurve.length;++f){
-					float prev = rotatecurve.keys[f-1].value;
-					float curr = rotatecurve.keys[f].value;
-					while ((curr - prev) > 180 ){
-						curr -= 360;
-					}
-					while ((curr - prev) < -180){
-						curr += 360;
-					}
-					if (rotatecurve.keys[f].value != curr){
-						rotatecurve.MoveKey(f, new Keyframe(rotatecurve.keys[f].time , curr));
-					}
+					ClampCurveRotate360(rotatecurve,f);
 				}
 			}
 		}
+		public static void ClampCurveRotate360(AnimationCurve rotatecurve,int f){
+			float prev = rotatecurve.keys[f-1].value;
+			float curr = rotatecurve.keys[f].value;
+			if(curr<-180f || curr>180f) return;
+			if(prev<-180f||prev>180f){
+				prev = rotatecurve.keys[f-2].value;
+			}
+
+			while ((curr - prev) > 180 ){
+				curr -= 360;
+			}
+			while ((curr - prev) < -180){
+				curr += 360;
+			}
+			if (rotatecurve.keys[f].value != curr){
+				rotatecurve.MoveKey(f, new Keyframe(rotatecurve.keys[f].time , curr));
+			}
+		}
+
 
 		// p0, p3 - start, end points
 		// p1, p2 - conrol points

@@ -86,6 +86,7 @@ namespace DragonBone
 			public float[] curve;
 			public int[] zOrder;
 			public float tweenEasing=float.PositiveInfinity;
+			public int tweenRotate = 0 ;//转的圈数
 			public int displayIndex=0;
 			public float z;
 			public TransformData transformData ;

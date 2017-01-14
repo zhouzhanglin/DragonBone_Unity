@@ -435,9 +435,23 @@ namespace DragonBone
 							ycurve.AddKey(KeyframeUtil.GetNew(during,defaultTransformData.y,tanModeL,tanModeR));
 						}
 
+						float rotate = 0;
 						if(!float.IsNaN(frameData.transformData.rotate)) {
-							float rotate = frameData.transformData.rotate+defaultTransformData.rotate;
+							rotate = frameData.transformData.rotate+defaultTransformData.rotate;
 							rotatecurve.AddKey(KeyframeUtil.GetNew(during,rotate,tanModeL,tanModeR));
+							if(j>0){
+								DragonBoneData.AnimFrameData prevFrameData = animSubData.frameDatas[j-1];
+								if(prevFrameData.tweenRotate!=0 && during+frameData.duration*perKeyTime - rotatecurve.keys[j-1].time>perKeyTime){
+									int tweenRotate = prevFrameData.tweenRotate;
+									if (tweenRotate > 0 ? -frameData.transformData.rotate >= -prevFrameData.transformData.rotate : -frameData.transformData.rotate <= -prevFrameData.transformData.rotate)
+									{
+										tweenRotate = tweenRotate > 0 ? tweenRotate - 1 : tweenRotate + 1;
+									}
+									float endRotate = -frameData.transformData.rotate + 360f * tweenRotate;
+									//insert keyframe
+									rotatecurve.AddKey(KeyframeUtil.GetNew(during-perKeyTime,-endRotate+defaultTransformData.rotate,tanModeL,TangentMode.Stepped));
+								}
+							}
 						}
 						else if(!float.IsNaN(defaultTransformData.rotate)){
 							rotatecurve.AddKey(KeyframeUtil.GetNew(during,boneNode.localEulerAngles.z,tanModeL,tanModeR));
@@ -500,7 +514,7 @@ namespace DragonBone
 
 				if(rotatecurve.keys !=null && rotatecurve.keys.Length>0 && CheckCurveValid(rotatecurve,defaultTransformData.rotate)){
 					CurveExtension.ClampCurveRotate360(rotatecurve);
-					if(isHaveCurve) SetCustomCurveTangents(rotatecurve,animSubData.frameDatas);
+					if(isHaveCurve) SetCustomRotateCurveTangents(rotatecurve,animSubData.frameDatas);
 					CurveExtension.UpdateAllLinearTangents(rotatecurve);
 					clip.SetCurve(path,typeof(Transform),"localEulerAngles.z",rotatecurve);
 				}
@@ -798,6 +812,22 @@ namespace DragonBone
 					if (frameDatas[i].curve != null ){ 
 						CurveExtension.SetCustomTangents(curve, i, nextI, frameDatas[i].curve);
 					}
+				}
+			}
+		}
+
+		static void SetCustomRotateCurveTangents(AnimationCurve curve, DragonBoneData.AnimFrameData[] frameDatas){
+			int len=curve.keys.Length;
+			int j=0;
+			for (int i = 0; i < len; i++) {
+				int nextI = i + 1;
+				if (nextI < curve.keys.Length && j<frameDatas.Length){
+					if (frameDatas[j].curve != null ){ 
+						CurveExtension.SetCustomTangents(curve, i, nextI, frameDatas[j].curve);
+					}
+				}
+				if(curve.keys[i].value<=180f || curve.keys[i].value>=-180f){
+					++j;
 				}
 			}
 		}
