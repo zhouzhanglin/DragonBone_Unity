@@ -130,6 +130,7 @@ namespace DragonBone
 		static void CreateAnimZOrder(ArmatureEditor armatureEditor, AnimationClip clip , DragonBoneData.AnimSubData[] subDatas)
 		{
 			if(subDatas==null) return;
+			int tempNumber = 1;
 			int len = subDatas.Length;
 			AnimationCurve armatureCurve = new AnimationCurve();
 			float perKeyTime = 1f/armatureEditor.armatureData.frameRate;
@@ -177,7 +178,8 @@ namespace DragonBone
 					else
 					{
 						//set Armature zorder invalid
-						armatureCurve.AddKey(new Keyframe(during,1,float.PositiveInfinity,float.PositiveInfinity));
+						armatureCurve.AddKey(new Keyframe(during,tempNumber,float.PositiveInfinity,float.PositiveInfinity));
+						++tempNumber;
 					}
 					during+= frameData.duration*perKeyTime;
 				}
@@ -192,7 +194,7 @@ namespace DragonBone
 					}
 				}
 				if(armatureCurve.keys.Length>0){
-					clip.SetCurve("/"+armatureEditor.armature.name,typeof(DragonBoneArmature),"m_ZOrderValid",armatureCurve);
+					clip.SetCurve("",typeof(DragonBoneArmature),"m_ZOrderValid",armatureCurve);
 				}
 			}
 		}

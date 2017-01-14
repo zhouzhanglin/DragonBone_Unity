@@ -23,8 +23,12 @@ namespace DragonBone
 
 		private List<Slot> m_OrderSlots = new List<Slot>();
 		private int[] m_NewSlotOrders = null ;
+
+		protected int __ZOrderValid = 0;
+		[HideInInspector]
 		[SerializeField]
-		private bool m_ZOrderValid = false;
+		private float m_ZOrderValid = 0f;
+
 
 		private Animator m_animator;
 		public Animator aniamtor{
@@ -196,6 +200,9 @@ namespace DragonBone
 		/// Lates the update. Sort slot
 		/// </summary>
 		void LateUpdate(){
+			#if UNITY_EDITOR
+			if(!Application.isPlaying) return; 
+			#endif
 			int orderCount = m_OrderSlots.Count;
 			if(aniamtor!=null && orderCount>0)
 			{
@@ -254,10 +261,14 @@ namespace DragonBone
 
 				m_OrderSlots.Clear();
 			}
-			else if(m_ZOrderValid)
+			else
 			{
-				m_ZOrderValid = false;
-				ResetSlotZOrder();
+				int temp=(int) m_ZOrderValid;
+				if(Mathf.Abs(m_ZOrderValid-temp)>0.0001f) return;
+				if(temp!=__ZOrderValid){
+					__ZOrderValid = temp;
+					ResetSlotZOrder();
+				}
 			}
 		}
 
@@ -313,8 +324,18 @@ namespace DragonBone
 		/// </summary>
 		/// <param name="slot">Slot.</param>
 		public void UpdateSlotZOrder(Slot slot){
-			if(slot.z!=0)
+			if(slot.z==0){
+				//set to pose zorder
+				float tempZ = m_FlipX || m_FlipY ? 1f : -1f;
+				if(m_FlipX && m_FlipY) tempZ = -1f;
+				tempZ*=zSpace;
+				Vector3 v = slot.transform.localPosition;
+				v.z = tempZ*slot.zOrder+tempZ*0.00001f;
+				slot.transform.localPosition = v;
+			}else{
 				m_OrderSlots.Add(slot);
+			}
+
 		}
 
 	}

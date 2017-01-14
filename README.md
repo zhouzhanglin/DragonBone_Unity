@@ -9,4 +9,5 @@ Dragon Bone是一款免费的动画制作工具，下载地址[http://dragonbone
 由于unity动画限制，所以此插件不支持nonInheritRotations，nonInheritScales (也就是DragonBone编辑器里这两个属性必须勾选)<br/>
 #注意事项
 在龙骨做绑定时，同一层级的骨骼和插槽名称不能相同<br/>
+层级变化动画需要运行后才会执行<br/>
 如果你只想使用spine的运行库，可以使用[DragonBoneToSpineData](http://git.oschina.net/bingheliefeng/DragonBoneToSpineData)
