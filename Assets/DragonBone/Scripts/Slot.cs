@@ -65,6 +65,7 @@ namespace DragonBone
 
 		public void UpdateSlot(){
 			int temp=(int) m_z;
+			if(Mathf.Abs(m_z-temp)>0.00001f) return;
 			if(temp!=__z){
 				__z = temp;
 				armature.UpdateSlotZOrder(this);
