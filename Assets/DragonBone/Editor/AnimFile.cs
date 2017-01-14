@@ -433,15 +433,18 @@ namespace DragonBone
 							rotatecurve.AddKey(KeyframeUtil.GetNew(during,rotate,tanModeL,tanModeR));
 							if(j>0){
 								DragonBoneData.AnimFrameData prevFrameData = animSubData.frameDatas[j-1];
-								if(prevFrameData.tweenRotate!=0 && during+frameData.duration*perKeyTime - rotatecurve.keys[j-1].time>perKeyTime){
+								float frameDeltaTime = during+frameData.duration*perKeyTime - rotatecurve.keys[j-1].time;
+								if(prevFrameData.tweenRotate!=0 && frameDeltaTime>perKeyTime){
 									int tweenRotate = prevFrameData.tweenRotate;
 									if (tweenRotate > 0 ? -frameData.transformData.rotate >= -prevFrameData.transformData.rotate : -frameData.transformData.rotate <= -prevFrameData.transformData.rotate)
 									{
 										tweenRotate = tweenRotate > 0 ? tweenRotate - 1 : tweenRotate + 1;
 									}
-									float endRotate = -frameData.transformData.rotate + 360f * tweenRotate;
+									float endRotate = frameData.transformData.rotate - 360f * tweenRotate;
+									float deltaRotate = (endRotate-prevFrameData.transformData.rotate)/(frameDeltaTime/perKeyTime);
+									endRotate -= deltaRotate;
 									//insert keyframe
-									rotatecurve.AddKey(KeyframeUtil.GetNew(during-perKeyTime,-endRotate+defaultTransformData.rotate,tanModeL,TangentMode.Stepped));
+									rotatecurve.AddKey(KeyframeUtil.GetNew(during-perKeyTime,endRotate+defaultTransformData.rotate,tanModeL,TangentMode.Stepped));
 								}
 							}
 						}
