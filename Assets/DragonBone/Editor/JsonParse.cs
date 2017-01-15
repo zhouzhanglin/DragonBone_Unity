@@ -360,9 +360,11 @@ namespace DragonBone
 					if(frameObj.ContainKey("duration")) frameData.duration = frameObj["duration"].AsInt;
 					if(frameObj.ContainKey("zOrder")){
 						SimpleJSON.JSONArray zs = frameObj["zOrder"].AsArray;
-						frameData.zOrder = new int[zs.Count];
-						for(int z=0;z<zs.Count;++z){
-							frameData.zOrder[z] = zs[z].AsInt;
+						if(zs!=null){
+							frameData.zOrder = new int[zs.Count];
+							for(int z=0;z<zs.Count;++z){
+								frameData.zOrder[z] = zs[z].AsInt;
+							}
 						}
 					}
 				}

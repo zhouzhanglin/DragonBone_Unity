@@ -303,22 +303,7 @@ namespace DragonBone
 									}
 								}
 							}
-							Renderer[] renders = slot.GetComponentsInChildren<Renderer>();
-							if(slotData.displayIndex==-1){
-								foreach(Renderer render in renders){
-									render.enabled = false;
-								}
-							}
-							else
-							{
-								for(int p=0;p<renders.Length;++p){
-									if(p!=slotData.displayIndex){
-										renders[p].enabled=false;
-									}else{
-										renders[p].enabled=true;
-									}
-								}
-							}
+							slot.GetComponent<Slot>().displayIndex = slotData.displayIndex;
 						}
 					}
 				}

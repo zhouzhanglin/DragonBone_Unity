@@ -69,6 +69,7 @@ namespace DragonBone
 		[HideInInspector]
 		public List<Slot> slots = new List<Slot>();
 
+		[MenuItem("Assets/DragonBone/DragonBone Panel (All Function)")]
 		[MenuItem("DragonBone/DragonBone Panel (All Function)")]
 		static void CreateWizard () {
 			ArmatureEditor editor = ScriptableWizard.DisplayWizard<ArmatureEditor>("Create DragonBone", "Create");
@@ -144,11 +145,13 @@ namespace DragonBone
 			}
 		}
 
+		[MenuItem("Assets/DragonBone/DragonBone (SpriteFrame)")]
 		[MenuItem("DragonBone/DragonBone (SpriteFrame)")]
 		static void CreateDragbonBoneByDir_SpriteFrame()
 		{
 			CreateDragonBoneByDir(false);
 		}
+		[MenuItem("Assets/DragonBone/DragonBone (UnitySprite)")]
 		[MenuItem("DragonBone/DragonBone (UnitySprite)")]
 		static void CreateDragbonBoneByDir_UnitySprite()
 		{
@@ -166,19 +169,19 @@ namespace DragonBone
 					foreach (string path in Directory.GetFiles(dirPath))
 					{  
 						if(path.LastIndexOf(".meta")==-1){
-							if(path.IndexOf("_tex.json")>-1 || (System.IO.Path.GetExtension(path) == ".json" && path.IndexOf("texture.")>-1) ){
+							if( System.IO.Path.GetExtension(path) == ".json" && (path.IndexOf("_tex")>-1 || path.IndexOf("texture")>-1) ){
 								int start = path.LastIndexOf("/")+1;
 								int end = path.LastIndexOf(".json");
 								textureJsonPathKV[path.Substring(start,end-start)] = path;
 								continue;
 							}
-							if(path.IndexOf("_tex.png")>-1 || (System.IO.Path.GetExtension(path) == ".png" && path.IndexOf("texture.")>-1) ){
+							if( System.IO.Path.GetExtension(path) == ".png" && (path.IndexOf("_tex")>-1 || path.IndexOf("texture")>-1) ){
 								int start = path.LastIndexOf("/")+1;
 								int end = path.LastIndexOf(".png");
 								texturePathKV[path.Substring(start,end-start)] = path;
 								continue;
 							}
-							if (path.IndexOf("_ske.json")>-1 || ( path.IndexOf("texture.json")==-1 && System.IO.Path.GetExtension(path) == ".json")) {
+							if ( System.IO.Path.GetExtension(path) == ".json" && (path.IndexOf("_ske")>-1 || path.IndexOf("texture.json")==-1)) {
 								animJsonPath = path;
 							}
 						}
@@ -312,14 +315,15 @@ namespace DragonBone
 				canDeleteArmature= true;
 			}
 
+			//update slot display
+			for(int s=0;s<slots.Count;++s){
+				slots[s].displayIndex = slots[s].displayIndex;
+			}
+
 			Renderer[] renders = _armature.GetComponentsInChildren<Renderer>();
 			List<SpriteMesh> sms = new List<SpriteMesh>();
 			foreach(Renderer r in renders){
-				if(!r.enabled){
-					r.enabled = true;
-					r.gameObject.SetActive(false);
-				}
-				else if(r.GetComponent<SpriteMesh>()!=null)
+				if(r.GetComponent<SpriteMesh>()!=null)
 				{
 					for(int i=0;i<r.transform.childCount;++i){
 						r.transform.GetChild(i).gameObject.SetActive(false);

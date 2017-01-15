@@ -31,6 +31,25 @@ namespace DragonBone
 			get { return __z; }
 		}
 
+		protected int __displayIndex;
+		[HideInInspector]
+		[SerializeField]
+		private float m_DisplayIndex;
+		public int displayIndex{
+			get {
+				return __displayIndex;
+			}
+			set
+			{
+				m_DisplayIndex = value;
+				__displayIndex = value;
+				for(int i=0;i<transform.childCount;++i){
+					if(value>-1 && i==value) transform.GetChild(i).gameObject.SetActive(true);
+					else transform.GetChild(i).gameObject.SetActive(false);
+				}
+			}
+		}
+
 		[SerializeField]
 		private BlendMode m_blendMode = BlendMode.Normal;
 		public BlendMode blendMode{
@@ -64,8 +83,18 @@ namespace DragonBone
 		}
 
 		public void UpdateSlot(){
+
+			int tempIndex = (int)m_DisplayIndex;
+			if(Mathf.Abs(m_DisplayIndex-tempIndex)<0.0001f){
+				if(tempIndex!=__displayIndex){
+					if(__displayIndex>-1) transform.GetChild(__displayIndex).gameObject.SetActive(false);
+					if(tempIndex>-1) transform.GetChild(tempIndex).gameObject.SetActive(true);
+					__displayIndex = tempIndex;
+				}
+			}
+
 			int temp=(int) m_z;
-			if(Mathf.Abs(m_z-temp)>0.00001f) return;
+			if(Mathf.Abs(m_z-temp)>0.0001f) return;
 			if(temp!=__z){
 				__z = temp;
 				armature.UpdateSlotZOrder(this);
@@ -155,7 +184,8 @@ namespace DragonBone
 
 		void Start(){
 			blendMode = m_blendMode;
-
+			__displayIndex = (int)m_DisplayIndex;
+			__z = 0;
 		}
 
 	}

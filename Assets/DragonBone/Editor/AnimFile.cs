@@ -532,12 +532,7 @@ namespace DragonBone
 				AnimationCurve color_gcurve = new AnimationCurve();
 				AnimationCurve color_bcurve = new AnimationCurve();
 				AnimationCurve color_acurve = new AnimationCurve();
-
-				Renderer[] renders = slotNode.GetComponentsInChildren<Renderer>();
-				AnimationCurve[] renderCurves = new AnimationCurve[renders.Length];
-				for(int r=0;r<renderCurves.Length;++r){
-					renderCurves[r] = new AnimationCurve();
-				}
+				AnimationCurve display_curve = new AnimationCurve();
 
 				float during = animSubData.offset;
 				float perKeyTime = 1f/armatureEditor.armatureData.frameRate;
@@ -586,21 +581,9 @@ namespace DragonBone
 					}
 
 					//改displyindex
-					if(frameData.displayIndex==-1){
-						for(int r=0;r<renders.Length;++r){
-							renderCurves[r].AddKey( new Keyframe(during,0f,float.PositiveInfinity,float.PositiveInfinity));
-						}
-					}
-					else
-					{
-						for(int r=0;r<renders.Length;++r){
-							if(r!=frameData.displayIndex){
-								renderCurves[r].AddKey( new Keyframe(during,0f,float.PositiveInfinity,float.PositiveInfinity));
-							}else{
-								renderCurves[r].AddKey( new Keyframe(during,1f,float.PositiveInfinity,float.PositiveInfinity));
-							}
-						}
-					}
+					if(frameData.displayIndex>-2)
+						display_curve.AddKey(new Keyframe(during,frameData.displayIndex,float.PositiveInfinity,float.PositiveInfinity));
+					
 					during+= frameData.duration*perKeyTime;
 				}
 
@@ -608,6 +591,7 @@ namespace DragonBone
 				CurveExtension.OptimizesCurve(color_gcurve);
 				CurveExtension.OptimizesCurve(color_bcurve);
 				CurveExtension.OptimizesCurve(color_acurve);
+				CurveExtension.OptimizesCurve(display_curve);
 
 				string path="";
 				if(slotPathKV.ContainsKey(slotName)){
@@ -667,13 +651,10 @@ namespace DragonBone
 					}
 				}
 
-				for(int r=0;r<renderCurves.Length;++r){
-					AnimationCurve ac = renderCurves[r];
-					Renderer render = renders[r];
-					float defaultValue = render.enabled? 1: 0;
-					if(ac.keys!=null && ac.keys.Length>0 && CheckCurveValid(ac,defaultValue)){
-						clip.SetCurve(path+"/"+render.name,typeof(GameObject),"m_IsActive",ac);	//m_Enabled
-					}
+				if(display_curve.keys!=null && display_curve.keys.Length>0 && 
+					CheckCurveValid(display_curve,slotNode.GetComponent<Slot>().displayIndex))
+				{
+					clip.SetCurve(path,typeof(Slot),"m_DisplayIndex",display_curve);
 				}
 			}
 		}
