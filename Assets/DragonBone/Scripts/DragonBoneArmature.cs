@@ -7,7 +7,7 @@ namespace DragonBone
 	[ExecuteInEditMode]
 	public class DragonBoneArmature : MonoBehaviour {
 
-		[Range(0.0001f,1f)]
+		[Range(0.001f,1f)]
 		public float zSpace = 0.001f;
 		[SerializeField]
 		private bool m_FlipX;
@@ -172,8 +172,10 @@ namespace DragonBone
 			return angle;
 		}
 
-		// Update is called once per frame
-		void Update () {
+		/// <summary>
+		/// Lates the update. Sort slot
+		/// </summary>
+		void LateUpdate(){
 			#if UNITY_EDITOR
 			if(Application.isPlaying){
 				if(aniamtor!=null && aniamtor.enabled)
@@ -194,15 +196,7 @@ namespace DragonBone
 				UpdateArmature();
 			}
 			#endif
-		}
 
-		/// <summary>
-		/// Lates the update. Sort slot
-		/// </summary>
-		void LateUpdate(){
-			#if UNITY_EDITOR
-			if(!Application.isPlaying) return; 
-			#endif
 			int orderCount = m_OrderSlots.Count;
 			if(aniamtor!=null && orderCount>0)
 			{
@@ -253,7 +247,7 @@ namespace DragonBone
 					Slot slot = slots[m_NewSlotOrders[i]];
 					if(slot){
 						Vector3 v = slot.transform.localPosition;
-						v.z = zoff*i+zoff*0.00001f;
+						v.z = zoff*i+zoff*0.001f;
 						slot.transform.localPosition = v;
 						slot._zOrderValid = false;
 					}
@@ -310,7 +304,7 @@ namespace DragonBone
 				Slot slot = slots[i];
 				if(slot){
 					Vector3 v = slot.transform.localPosition;
-					v.z = tempZ*slot.zOrder+tempZ*0.00001f;
+					v.z = tempZ*slot.zOrder+tempZ*0.001f;
 					slot.transform.localPosition = v;
 					#if UNITY_EDITOR 
 					if(!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(slot.transform);
@@ -324,18 +318,7 @@ namespace DragonBone
 		/// </summary>
 		/// <param name="slot">Slot.</param>
 		public void UpdateSlotZOrder(Slot slot){
-			if(slot.z==0){
-				//set to pose zorder
-				float tempZ = m_FlipX || m_FlipY ? 1f : -1f;
-				if(m_FlipX && m_FlipY) tempZ = -1f;
-				tempZ*=zSpace;
-				Vector3 v = slot.transform.localPosition;
-				v.z = tempZ*slot.zOrder+tempZ*0.00001f;
-				slot.transform.localPosition = v;
-			}else{
-				m_OrderSlots.Add(slot);
-			}
-
+			if(slot.z!=0) m_OrderSlots.Add(slot);
 		}
 
 	}

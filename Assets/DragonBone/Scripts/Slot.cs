@@ -155,8 +155,6 @@ namespace DragonBone
 
 		void Start(){
 			blendMode = m_blendMode;
-			__z = zOrder;
-			m_z = zOrder;
 
 		}
 
