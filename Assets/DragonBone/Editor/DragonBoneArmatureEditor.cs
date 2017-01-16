@@ -70,8 +70,6 @@ namespace DragonBone
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_FlipY"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("zSpace"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("slots"), true);
-			EditorGUILayout.PropertyField(serializedObject.FindProperty("updateFrames"), true);
-			EditorGUILayout.PropertyField(serializedObject.FindProperty("updateMeshs"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("attachments"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("materials"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("textureFrames"), true);

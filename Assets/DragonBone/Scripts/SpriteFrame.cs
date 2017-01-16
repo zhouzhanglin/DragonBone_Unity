@@ -222,13 +222,6 @@ namespace DragonBone
 		}
 		#endif
 
-		public void UpdateFrame(){
-			if( m_createdMesh){
-				color = m_color;
-			}
-		}
-
-
 		public void UpdateSorting(){
 			if(m_meshRenderer){
 				m_meshRenderer.sortingLayerName = m_sortingLayerName;

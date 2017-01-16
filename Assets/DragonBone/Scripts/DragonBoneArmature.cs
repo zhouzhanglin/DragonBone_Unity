@@ -15,8 +15,6 @@ namespace DragonBone
 		private bool m_FlipY;
 
 		public Slot[] slots;
-		public SpriteFrame[] updateFrames;
-		public SpriteMesh[] updateMeshs;
 		public Renderer[] attachments;
 		public Material[] materials;
 		public TextureFrame[] textureFrames;
@@ -181,14 +179,14 @@ namespace DragonBone
 			if(Application.isPlaying){
 				if(aniamtor!=null && aniamtor.enabled)
 				{
-					UpdateArmature();
+					UpdateSlots();
 				}
 			}
 			else
 			{
 				if(aniamtor!=null)
 				{
-					UpdateArmature();
+					UpdateSlots();
 				}
 			}
 			#else
@@ -272,20 +270,8 @@ namespace DragonBone
 		/// <summary>
 		/// update
 		/// </summary>
-		public void UpdateArmature(){
-			int len = updateFrames.Length;
-			for(int i=0;i<len;++i){
-				SpriteFrame frame = updateFrames[i];
-				if(frame&&frame.isActiveAndEnabled) frame.UpdateFrame();
-			}
-
-			len = updateMeshs.Length;
-			for(int i=0;i<len;++i){
-				SpriteMesh mesh = updateMeshs[i];
-				if(mesh&&mesh.isActiveAndEnabled) mesh.UpdateMesh();
-			}
-
-			len = slots.Length;
+		public void UpdateSlots(){
+			int len = slots.Length;
 			for(int i=0;i<len;++i){
 				Slot slot = slots[i];
 				if(slot && slot.isActiveAndEnabled){

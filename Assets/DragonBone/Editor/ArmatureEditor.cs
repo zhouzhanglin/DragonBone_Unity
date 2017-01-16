@@ -309,11 +309,6 @@ namespace DragonBone
 			AnimFile.CreateAnimFile(this);
 
 			DragonBoneArmature dba = _armature.GetComponent<DragonBoneArmature>();
-			bool canDeleteArmature = false;
-			if(armature && (dba.updateMeshs == null || dba.updateMeshs.Length==0) 
-				&& (dba.updateFrames==null || dba.updateFrames.Length==0)){
-				canDeleteArmature= true;
-			}
 
 			//update slot display
 			for(int s=0;s<slots.Count;++s){
@@ -321,27 +316,13 @@ namespace DragonBone
 			}
 
 			Renderer[] renders = _armature.GetComponentsInChildren<Renderer>();
-			List<SpriteMesh> sms = new List<SpriteMesh>();
 			foreach(Renderer r in renders){
-				if(r.GetComponent<SpriteMesh>()!=null)
-				{
-					for(int i=0;i<r.transform.childCount;++i){
-						r.transform.GetChild(i).gameObject.SetActive(false);
-					}
-					sms.Add(r.GetComponent<SpriteMesh>());
-					canDeleteArmature = false;
-				}
-				else if(r.GetComponent<SpriteFrame>()){
+				if(r.GetComponent<SpriteFrame>()){
 					//optimize memory
 					SpriteFrame sf = r.GetComponent<SpriteFrame>();
 					TextureFrame tf = sf.frame;
 					sf.frames=new TextureFrame[]{tf};
 				}
-			}
-			if(canDeleteArmature){
-//				Object.DestroyImmediate(dba);//don't destroy
-			}else{
-				dba.updateMeshs = sms.ToArray();
 			}
 			dba.attachments = renders;
 			dba.slots = slots.ToArray();

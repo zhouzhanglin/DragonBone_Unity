@@ -268,7 +268,6 @@ namespace DragonBone
 					}
 					m_mesh.vertices=vertices;
 				}
-				color = m_color;
 				UpdateEdges();
 			}
 		}

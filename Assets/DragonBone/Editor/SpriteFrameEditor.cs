@@ -79,7 +79,6 @@ namespace DragonBone
 			}
 			EditorGUILayout.EndVertical();
 			EditorGUILayout.Space();
-			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_textureSize"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_uvOffset"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_pivot"), true);
 			if(sprite.frames!=null && !string.IsNullOrEmpty(sprite.frameName)){

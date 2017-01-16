@@ -22,6 +22,11 @@ namespace DragonBone
 		[HideInInspector]
 		public int zOrder=0;//default z order
 
+		public Color color=Color.white;
+		private SpriteFrame m_SpriteFrame = null;
+		private SpriteMesh m_SpriteMesh = null;
+		private SpriteRenderer m_SpriteRenderer = null;
+
 		private int __z=0;
 		[HideInInspector]
 		[SerializeField]
@@ -86,14 +91,21 @@ namespace DragonBone
 		}
 
 		public void UpdateSlot(){
-			int tempIndex = Mathf.RoundToInt(m_DisplayIndex);
-			if(Mathf.Abs(m_DisplayIndex-tempIndex)<0.0001f){
-				if(tempIndex!=__displayIndex){
-					if(__displayIndex>-1) transform.GetChild(__displayIndex).gameObject.SetActive(false);
-					if(tempIndex>-1) transform.GetChild(tempIndex).gameObject.SetActive(true);
-					__displayIndex = tempIndex;
+			if(transform.childCount>0){
+				int tempIndex = Mathf.RoundToInt(m_DisplayIndex);
+				if(Mathf.Abs(m_DisplayIndex-tempIndex)<0.0001f){
+					if(tempIndex!=__displayIndex){
+						if(__displayIndex>-1) transform.GetChild(__displayIndex).gameObject.SetActive(false);
+						if(tempIndex>-1) transform.GetChild(tempIndex).gameObject.SetActive(true);
+						__displayIndex = tempIndex;
+						UpdateCurrentDisplay();
+					}
 				}
 			}
+			#if UNITY_EDITOR
+			if(!Application.isPlaying) UpdateCurrentDisplay();
+			#endif
+			UpdateDisplayColor();
 
 			int temp=Mathf.RoundToInt( m_z);
 			if(Mathf.Abs(m_z-temp)>0.0001f) return;
@@ -188,8 +200,32 @@ namespace DragonBone
 			blendMode = m_blendMode;
 			__displayIndex = Mathf.RoundToInt(m_DisplayIndex);
 			__z = 0;
+			UpdateCurrentDisplay();
+			UpdateDisplayColor();
 		}
 
+		void UpdateCurrentDisplay(){
+			if(__displayIndex>-1 && transform.childCount>0){
+				m_SpriteFrame = null;
+				m_SpriteMesh = null;
+				m_SpriteRenderer = null;
+				Transform child = transform.GetChild(__displayIndex);
+				m_SpriteFrame = child.GetComponent<SpriteFrame>();
+				m_SpriteMesh = child.GetComponent<SpriteMesh>();
+				m_SpriteRenderer = child.GetComponent<SpriteRenderer>();
+			}
+		}
+
+		void UpdateDisplayColor(){
+			if(m_SpriteFrame){
+				m_SpriteFrame.color = color;
+			}else if(m_SpriteMesh){
+				m_SpriteMesh.color = color;
+				m_SpriteMesh.UpdateMesh();
+			}else if(m_SpriteRenderer){
+				m_SpriteRenderer.color = color;
+			}
+		}
 	}
 
 }

@@ -56,6 +56,15 @@ namespace DragonBone
 		public class ColorData{
 			public float aM=1f,rM=1f,gM=1f,bM = 1f; //颜色叠加 0-1
 			public float a0=0f,r0=0f,g0=0f,b0 =0f;//颜色偏移-1 - 1
+
+			public Color ToColor(){
+				Color c = Color.white;
+				c.a = aM+a0;
+				c.r = rM+r0;
+				c.g = gM+g0;
+				c.b = bM+b0;
+				return c;
+			}
 		}
 
 		public class AnimationData {

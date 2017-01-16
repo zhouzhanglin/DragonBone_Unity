@@ -43,6 +43,9 @@ namespace DragonBone
 					slot.zOrder = i;
 					slot.armature = armature;
 					slot.blendMode = slot.ConvertBlendMode( slotData.blendMode.ToLower());
+					if(slotData.color!=null){
+						slot.color = slotData.color.ToColor();
+					}
 					armatureEditor.slots.Add(slot);
 				}
 			}
@@ -381,14 +384,7 @@ namespace DragonBone
 			if(!float.IsNaN(displayData.transform.scy)) localSc.y = displayData.transform.scy;
 			newFrame.transform.localScale = localSc;
 
-			Color c = Color.white;
-			if(slotData.color!=null){
-				c.a = slotData.color.aM+slotData.color.a0;
-				c.r = slotData.color.rM+slotData.color.r0;
-				c.g = slotData.color.gM+slotData.color.g0;
-				c.b = slotData.color.bM+slotData.color.b0;
-				newFrame.color = c;
-			}
+			newFrame.color = slot.GetComponent<Slot>().color;
 
 			if(!float.IsNaN(displayData.transform.rotate))
 				newFrame.transform.localRotation = Quaternion.Euler(0,0,displayData.transform.rotate);
@@ -416,14 +412,7 @@ namespace DragonBone
 			if(!float.IsNaN(displayData.transform.scy)) localSc.y = displayData.transform.scy;
 			go.transform.localScale = localSc;
 
-			Color c = Color.white;
-			if(slotData.color!=null){
-				c.a = slotData.color.aM+slotData.color.a0;
-				c.r = slotData.color.rM+slotData.color.r0;
-				c.g = slotData.color.gM+slotData.color.g0;
-				c.b = slotData.color.bM+slotData.color.b0;
-				renderer.color = c;
-			}
+			renderer.color = slot.GetComponent<Slot>().color;
 
 			if(!float.IsNaN(displayData.transform.rotate))
 				go.transform.localRotation = Quaternion.Euler(0,0,displayData.transform.rotate);
@@ -572,14 +561,7 @@ namespace DragonBone
 			if(!float.IsNaN(tranform.scy)) localSc.y = tranform.scy;
 			sm.transform.localScale = localSc;
 
-			Color c = Color.white;
-			if(slotData.color!=null){
-				c.a = slotData.color.aM+slotData.color.a0;
-				c.r = slotData.color.rM+slotData.color.r0;
-				c.g = slotData.color.gM+slotData.color.g0;
-				c.b = slotData.color.bM+slotData.color.b0;
-				sm.color = c;
-			}
+			sm.color = slot.GetComponent<Slot>().color;
 			sm.transform.localRotation = Quaternion.Euler(0,0,tranform.rotate);
 		}
 

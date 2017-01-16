@@ -14,15 +14,10 @@ namespace DragonBone
 	/// </summary>
 	public class AnimFile {
 
-
-		private static Dictionary<string,SpriteFrame> changedSpriteFramesKV = null;
-		private static Dictionary<string,SpriteMesh> changedSpriteMeshsKV = null;
 		private static Dictionary<string,string> slotPathKV = null;
 
 		public static void CreateAnimFile(ArmatureEditor armatureEditor)
 		{
-			changedSpriteFramesKV=  new Dictionary<string, SpriteFrame>();
-			changedSpriteMeshsKV =  new Dictionary<string, SpriteMesh>();
 			slotPathKV = new Dictionary<string, string>();
 
 			string path = AssetDatabase.GetAssetPath(armatureEditor.animTextAsset);
@@ -61,7 +56,6 @@ namespace DragonBone
 					CreateSlotAnim(armatureEditor ,clip,animationData.slotDatas , armatureEditor.slotsKV );
 					CreateFFDAnim(armatureEditor ,clip,animationData.ffdDatas , armatureEditor.slotsKV);
 					CreateAnimZOrder	(armatureEditor,clip,animationData.zOrderDatas);
-					SetDragonBoneArmature(armatureEditor);
 					SetEvent(armatureEditor,clip,animationData.keyDatas);
 
 					SerializedObject serializedClip = new SerializedObject(clip);
@@ -341,9 +335,6 @@ namespace DragonBone
 					for(int k=0;k<vertexcurvexArray.Count;++k){
 						Transform ffdNode = slotNode.GetChild(k);
 						if(ffdNode.name==animSubData.name){
-
-							changedSpriteMeshsKV[path+"/"+ffdNode.name] = ffdNode.GetComponent<SpriteMesh>();
-
 							AnimationCurve[] vertex_xcurves= vertexcurvexArray[k];
 							AnimationCurve[] vertex_ycurves= vertexcurveyArray[k];
 							for(int r=0;r<vertex_xcurves.Length;++r){
@@ -624,49 +615,11 @@ namespace DragonBone
 				float dr = defaultColorData.rM+defaultColorData.r0;
 				float dg = defaultColorData.gM+defaultColorData.g0;
 				float db = defaultColorData.bM+defaultColorData.b0;
-				if(armatureEditor.useUnitySprite)
-				{
-					SpriteRenderer[] sprites = slotNode.GetComponentsInChildren<SpriteRenderer>();
-					if(sprites!=null){
-						for(int z=0;z<sprites.Length;++z){
-							string childPath = path+"/"+sprites[z].name;
-							SetColorCurve<SpriteRenderer>(childPath,clip,color_rcurve,"m_Color.r",isHaveCurve,dr,animSubData.frameDatas);
-							SetColorCurve<SpriteRenderer>(childPath,clip,color_gcurve,"m_Color.g",isHaveCurve,dg,animSubData.frameDatas);
-							SetColorCurve<SpriteRenderer>(childPath,clip,color_bcurve,"m_Color.b",isHaveCurve,db,animSubData.frameDatas);
-							SetColorCurve<SpriteRenderer>(childPath,clip,color_acurve,"m_Color.a",isHaveCurve,da,animSubData.frameDatas);
-						}
-					}
-				}
-				else
-				{
-					SpriteFrame[] sprites = slotNode.GetComponentsInChildren<SpriteFrame>();
-					if(sprites!=null){
-						for(int z=0;z<sprites.Length;++z){
-							string childPath = path+"/"+sprites[z].name;
-							bool anim_r = SetColorCurve<SpriteFrame>(childPath,clip,color_rcurve,"m_color.r",isHaveCurve,dr,animSubData.frameDatas);
-							bool anim_g = SetColorCurve<SpriteFrame>(childPath,clip,color_gcurve,"m_color.g",isHaveCurve,dg,animSubData.frameDatas);
-							bool anim_b = SetColorCurve<SpriteFrame>(childPath,clip,color_bcurve,"m_color.b",isHaveCurve,db,animSubData.frameDatas);
-							bool anim_a = SetColorCurve<SpriteFrame>(childPath,clip,color_acurve,"m_color.a",isHaveCurve,da,animSubData.frameDatas);
-							if(anim_r||anim_g||anim_b||anim_a){
-								changedSpriteFramesKV[childPath] = sprites[z];
-							}
-						}
-					}
 
-					SpriteMesh[] spriteMeshs = slotNode.GetComponentsInChildren<SpriteMesh>();
-					if(spriteMeshs!=null){
-						for(int z=0;z<spriteMeshs.Length;++z){
-							string childPath = path+"/"+spriteMeshs[z].name;
-							bool anim_r = SetColorCurve<SpriteMesh>(childPath,clip,color_rcurve,"m_color.r",isHaveCurve,da,animSubData.frameDatas);
-							bool anim_g = SetColorCurve<SpriteMesh>(childPath,clip,color_gcurve,"m_color.g",isHaveCurve,dg,animSubData.frameDatas);
-							bool anim_b = SetColorCurve<SpriteMesh>(childPath,clip,color_bcurve,"m_color.b",isHaveCurve,db,animSubData.frameDatas);
-							bool anim_a = SetColorCurve<SpriteMesh>(childPath,clip,color_acurve,"m_color.a",isHaveCurve,da,animSubData.frameDatas);
-							if(anim_r||anim_g||anim_b||anim_a){
-								changedSpriteMeshsKV[childPath] = spriteMeshs[z];
-							}
-						}
-					}
-				}
+				SetColorCurve<Slot>(path,clip,color_rcurve,"color.r",isHaveCurve,dr,animSubData.frameDatas);
+				SetColorCurve<Slot>(path,clip,color_gcurve,"color.g",isHaveCurve,dg,animSubData.frameDatas);
+				SetColorCurve<Slot>(path,clip,color_bcurve,"color.b",isHaveCurve,db,animSubData.frameDatas);
+				SetColorCurve<Slot>(path,clip,color_acurve,"color.a",isHaveCurve,da,animSubData.frameDatas);
 
 				if(display_curve.keys!=null && display_curve.keys.Length>0 && 
 					CheckCurveValid(display_curve,slotNode.GetComponent<Slot>().displayIndex))
@@ -685,25 +638,6 @@ namespace DragonBone
 				return true;
 			}
 			return false;
-		}
-
-		static void SetDragonBoneArmature(ArmatureEditor armature){
-			DragonBoneArmature dbArmature = armature.armature.GetComponent<DragonBoneArmature>();
-			if(dbArmature){
-				dbArmature.updateFrames = new SpriteFrame[changedSpriteFramesKV.Count];
-				int i=0;
-				foreach(SpriteFrame frame in changedSpriteFramesKV.Values){
-					dbArmature.updateFrames[i] = frame;
-					++i;
-				}
-
-				dbArmature.updateMeshs = new SpriteMesh[changedSpriteMeshsKV.Count];
-				i=0;
-				foreach(SpriteMesh mesh in changedSpriteMeshsKV.Values){
-					dbArmature.updateMeshs[i] = mesh;
-					++i;
-				}
-			}
 		}
 
 		/// <summary>
