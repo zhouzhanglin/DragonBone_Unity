@@ -104,13 +104,11 @@ namespace DragonBone
 
 		[SerializeField]
 		private Color m_color = Color.white;//For Animation
-		private Color __Color = Color.white;
 		public Color color{
-			get { return __Color;}
+			get { return m_color;}
 			set { 
-				if(!__Color.Equals(value)  || !m_color.Equals(value)){
+				if(!m_color.Equals(value)){
 					m_color = value; 
-					__Color = value;
 					if(m_createdMesh)	UpdateVertexColor();
 				}
 			}
