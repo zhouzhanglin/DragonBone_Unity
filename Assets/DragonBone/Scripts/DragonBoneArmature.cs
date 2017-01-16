@@ -22,7 +22,8 @@ namespace DragonBone
 		public TextureFrame[] textureFrames;
 
 		private List<Slot> m_OrderSlots = new List<Slot>();
-		private int[] m_NewSlotOrders = null ;
+		private int[] m_NewSlotOrders = null ;		
+		private bool m_CanSortAllSlot = false;
 
 		protected int __ZOrderValid = 0;
 		[HideInInspector]
@@ -196,64 +197,9 @@ namespace DragonBone
 				UpdateArmature();
 			}
 			#endif
-
-			int orderCount = m_OrderSlots.Count;
-			if(aniamtor!=null && orderCount>0)
-			{
-				int slotCount = slots.Length;
-				int[] unchanged = new int[slotCount - orderCount];
-
-				if(m_NewSlotOrders==null){
-					m_NewSlotOrders = new int[slotCount];
-				}
-				for (int i = 0; i < slotCount; ++i){
-					m_NewSlotOrders[i] = -1;
-				}
-
-				int originalIndex = 0;
-				int unchangedIndex = 0;
-				for (int i = 0; i<orderCount ; ++i)
-				{
-					Slot slot = m_OrderSlots[i];
-					int slotIndex = slot.zOrder;
-					int offset = slot.z;
-
-					while (originalIndex != slotIndex)
-					{
-						unchanged[unchangedIndex++] = originalIndex++;
-					}
-					m_NewSlotOrders[originalIndex + offset] = originalIndex++;
-				}
-
-				while (originalIndex < slotCount)
-				{
-					unchanged[unchangedIndex++] = originalIndex++;
-				}
-
-				int iC = slotCount;
-				while (iC-- != 0)
-				{
-					if (m_NewSlotOrders[iC] == -1)
-					{
-						m_NewSlotOrders[iC] = unchanged[--unchangedIndex];
-					}
-				}
-
-				//set order
-				float zoff = m_FlipX || m_FlipY ? 1f : -1f;
-				if(m_FlipX && m_FlipY) zoff = -1f;
-				zoff*=zSpace;
-				for(int i=0;i<slotCount;++i){
-					Slot slot = slots[m_NewSlotOrders[i]];
-					if(slot){
-						Vector3 v = slot.transform.localPosition;
-						v.z = zoff*i+zoff*0.001f;
-						slot.transform.localPosition = v;
-						slot._zOrderValid = false;
-					}
-				}
-
-				m_OrderSlots.Clear();
+			if(m_CanSortAllSlot){
+				ForceSortAll();
+				m_CanSortAllSlot = false;
 			}
 			else
 			{
@@ -264,6 +210,63 @@ namespace DragonBone
 					ResetSlotZOrder();
 				}
 			}
+		}
+
+		void CalculateOrder(){
+			int orderCount = m_OrderSlots.Count;
+			int slotCount = slots.Length;
+			int[] unchanged = new int[slotCount - orderCount];
+
+			if(m_NewSlotOrders==null){
+				m_NewSlotOrders = new int[slotCount];
+			}
+			for (int i = 0; i < slotCount; ++i){
+				m_NewSlotOrders[i] = -1;
+			}
+
+			int originalIndex = 0;
+			int unchangedIndex = 0;
+			for (int i = 0; i<orderCount ; ++i)
+			{
+				Slot slot = m_OrderSlots[i];
+				int slotIndex = slot.zOrder;
+				int offset = slot.z;
+
+				while (originalIndex != slotIndex)
+				{
+					unchanged[unchangedIndex++] = originalIndex++;
+				}
+				m_NewSlotOrders[originalIndex + offset] = originalIndex++;
+			}
+
+			while (originalIndex < slotCount)
+			{
+				unchanged[unchangedIndex++] = originalIndex++;
+			}
+
+			int iC = slotCount;
+			while (iC-- != 0)
+			{
+				if (m_NewSlotOrders[iC] == -1)
+				{
+					m_NewSlotOrders[iC] = unchanged[--unchangedIndex];
+				}
+			}
+
+			//set order
+			float zoff = m_FlipX || m_FlipY ? 1f : -1f;
+			if(m_FlipX && m_FlipY) zoff = -1f;
+			zoff*=zSpace;
+			for(int i=0;i<slotCount;++i){
+				Slot slot = slots[m_NewSlotOrders[i]];
+				if(slot){
+					Vector3 v = slot.transform.localPosition;
+					v.z = zoff*i+zoff*0.001f;
+					slot.transform.localPosition = v;
+				}
+			}
+
+			m_OrderSlots.Clear();
 		}
 
 		/// <summary>
@@ -306,11 +309,30 @@ namespace DragonBone
 					Vector3 v = slot.transform.localPosition;
 					v.z = tempZ*slot.zOrder+tempZ*0.001f;
 					slot.transform.localPosition = v;
+					slot.z = 0;
 					#if UNITY_EDITOR 
 					if(!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(slot.transform);
 					#endif
 				}
 			}
+			m_OrderSlots.Clear();
+			m_CanSortAllSlot = false;
+		}
+
+		/// <summary>
+		/// Forces the sort all.
+		/// </summary>
+		public void ForceSortAll(){
+			m_OrderSlots.Clear();
+			int len = slots.Length;
+			for(int i=0;i<len;++i){
+				Slot slot = slots[i];
+				if(slot){
+					if(slot.z!=0) m_OrderSlots.Add(slot);
+				}
+			}
+			if(m_OrderSlots.Count>0)
+				CalculateOrder();
 		}
 
 		/// <summary>
@@ -318,7 +340,7 @@ namespace DragonBone
 		/// </summary>
 		/// <param name="slot">Slot.</param>
 		public void UpdateSlotZOrder(Slot slot){
-			if(slot.z!=0) m_OrderSlots.Add(slot);
+			if(slot.z!=0) m_CanSortAllSlot = true;
 		}
 
 	}

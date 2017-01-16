@@ -177,6 +177,25 @@ namespace DragonBone
 					}
 					else
 					{
+						for(int z=0;z<armatureEditor.slots.Count;++z){
+							Slot slot = armatureEditor.slots[z];
+							string path = "";
+							if(slotPathKV.ContainsKey(slot.name)){
+								path = slotPathKV[slot.name];
+							}else{
+								path = GetNodeRelativePath(armatureEditor,slot.transform) ;
+								slotPathKV[slot.name] = path;
+							}
+
+							AnimationCurve curve = null;
+							if(slotZOrderKV.ContainsKey(slot.name)){
+								curve = slotZOrderKV[slot.name];
+							}else{
+								curve = new AnimationCurve();
+								slotZOrderKV[slot.name] = curve;
+							}
+							curve.AddKey( new Keyframe(during,0,float.PositiveInfinity,float.PositiveInfinity));
+						}
 						//set Armature zorder invalid
 						armatureCurve.AddKey(new Keyframe(during,tempNumber,float.PositiveInfinity,float.PositiveInfinity));
 						++tempNumber;
@@ -186,10 +205,8 @@ namespace DragonBone
 				foreach(string name in slotZOrderKV.Keys)
 				{
 					AnimationCurve zOrderCurve = slotZOrderKV[name];
-					Slot slot = armatureEditor.slotsKV[name].GetComponent<Slot>();
-
 					CurveExtension.OptimizesCurve(zOrderCurve);
-					if(zOrderCurve!=null && zOrderCurve.keys!=null && zOrderCurve.keys.Length>0 && CheckCurveValid(zOrderCurve,slot.zOrder)){
+					if(zOrderCurve!=null && zOrderCurve.keys!=null && zOrderCurve.keys.Length>0 && CheckCurveValid(zOrderCurve,0)){
 						clip.SetCurve(slotPathKV[name],typeof(Slot),"m_z",zOrderCurve);
 					}
 				}

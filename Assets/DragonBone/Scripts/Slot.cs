@@ -20,15 +20,18 @@ namespace DragonBone
 		public DragonBoneArmature armature;
 
 		[HideInInspector]
-		public int zOrder;//default z order
-		protected internal bool _zOrderValid = false;
+		public int zOrder=0;//default z order
 
-		private int __z;
+		private int __z=0;
 		[HideInInspector]
 		[SerializeField]
-		private float m_z;
+		private float m_z=0;
 		public int z{
 			get { return __z; }
+			set {
+				__z = value;
+				m_z = value;
+			}
 		}
 
 		protected int __displayIndex;
@@ -83,8 +86,7 @@ namespace DragonBone
 		}
 
 		public void UpdateSlot(){
-
-			int tempIndex = (int)m_DisplayIndex;
+			int tempIndex = Mathf.RoundToInt(m_DisplayIndex);
 			if(Mathf.Abs(m_DisplayIndex-tempIndex)<0.0001f){
 				if(tempIndex!=__displayIndex){
 					if(__displayIndex>-1) transform.GetChild(__displayIndex).gameObject.SetActive(false);
@@ -93,7 +95,7 @@ namespace DragonBone
 				}
 			}
 
-			int temp=(int) m_z;
+			int temp=Mathf.RoundToInt( m_z);
 			if(Mathf.Abs(m_z-temp)>0.0001f) return;
 			if(temp!=__z){
 				__z = temp;
@@ -184,7 +186,7 @@ namespace DragonBone
 
 		void Start(){
 			blendMode = m_blendMode;
-			__displayIndex = (int)m_DisplayIndex;
+			__displayIndex = Mathf.RoundToInt(m_DisplayIndex);
 			__z = 0;
 		}
 
