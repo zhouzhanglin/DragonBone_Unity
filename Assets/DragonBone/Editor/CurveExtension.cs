@@ -70,7 +70,7 @@ namespace CurveExtended{
 			float curr = rotatecurve.keys[f].value;
 			if(curr<-180f || curr>180f) return;
 			if(prev<-180f||prev>180f){
-				prev = rotatecurve.keys[f-2].value;
+				if(f>1) prev = rotatecurve.keys[f-2].value;
 			}
 
 			while ((curr - prev) > 180 ){
