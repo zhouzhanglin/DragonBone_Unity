@@ -167,6 +167,10 @@ namespace DragonBone
 								curve.AddKey( new Keyframe(during+frameData.duration*perKeyTime,changeZ,float.PositiveInfinity,float.PositiveInfinity));
 							}
 							curve.AddKey( new Keyframe(during,changeZ,float.PositiveInfinity,float.PositiveInfinity));
+
+							//set Armature zorder invalid
+							armatureCurve.AddKey(new Keyframe(during,tempNumber,float.PositiveInfinity,float.PositiveInfinity));
+							++tempNumber;
 						}
 					}
 					else

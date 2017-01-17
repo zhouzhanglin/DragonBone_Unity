@@ -376,24 +376,24 @@ namespace DragonBone
 
 		static void ShowCustomCollider(DragonBoneData.SkinSlotDisplayData displayData,Transform slot ,ArmatureEditor armatureEditor,DragonBoneData.SlotData slotData)
 		{
+			GameObject go = new GameObject(displayData.textureName);
+			go.transform.parent = slot;
+			Vector3 localPos = Vector3.zero;
+			if(!float.IsNaN(displayData.transform.x)) localPos.x = displayData.transform.x;
+			if(!float.IsNaN(displayData.transform.y)) localPos.y = displayData.transform.y;
+			go.transform.localPosition = localPos;
+
+			Vector3 localSc = Vector3.one;
+			if(!float.IsNaN(displayData.transform.scx)) localSc.x = displayData.transform.scx;
+			if(!float.IsNaN(displayData.transform.scy)) localSc.y = displayData.transform.scy;
+			go.transform.localScale = localSc;
+
+			if(!float.IsNaN(displayData.transform.rotate))
+			{
+				go.transform.localRotation = Quaternion.Euler(0,0,displayData.transform.rotate);
+			}
+
 			if(armatureEditor.genCustomCollider){
-				GameObject go = new GameObject(displayData.textureName);
-				go.transform.parent = slot;
-				Vector3 localPos = Vector3.zero;
-				if(!float.IsNaN(displayData.transform.x)) localPos.x = displayData.transform.x;
-				if(!float.IsNaN(displayData.transform.y)) localPos.y = displayData.transform.y;
-				go.transform.localPosition = localPos;
-
-				Vector3 localSc = Vector3.one;
-				if(!float.IsNaN(displayData.transform.scx)) localSc.x = displayData.transform.scx;
-				if(!float.IsNaN(displayData.transform.scy)) localSc.y = displayData.transform.scy;
-				go.transform.localScale = localSc;
-
-				if(!float.IsNaN(displayData.transform.rotate))
-				{
-					go.transform.localRotation = Quaternion.Euler(0,0,displayData.transform.rotate);
-				}
-
 				PolygonCollider2D collider = go.AddComponent<PolygonCollider2D>();
 				Vector2[] points = new Vector2[displayData.vertices.Length];
 				int len = points.Length;

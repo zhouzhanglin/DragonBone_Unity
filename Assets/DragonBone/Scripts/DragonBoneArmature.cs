@@ -198,6 +198,12 @@ namespace DragonBone
 			if(m_CanSortAllSlot){
 				ForceSortAll();
 				m_CanSortAllSlot = false;
+
+				int temp=(int) m_ZOrderValid;
+				if(Mathf.Abs(m_ZOrderValid-temp)>0.0001f) return;
+				if(temp!=__ZOrderValid){
+					__ZOrderValid = temp;
+				}
 			}
 			else
 			{
