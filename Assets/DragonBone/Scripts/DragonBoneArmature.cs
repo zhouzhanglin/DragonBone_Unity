@@ -329,5 +329,193 @@ namespace DragonBone
 			if(slot.z!=0) m_CanSortAllSlot = true;
 		}
 
+
+		#region Change Skin
+
+		/// <summary>
+		/// Gets attachment by name.
+		/// </summary>
+		/// <returns>The attachment.</returns>
+		/// <param name="attachmentName">Attachment name.</param>
+		public Renderer GetAttachmentByName( string attachmentName){
+			foreach(Renderer r in attachments){
+				if(r && r.name.Equals(attachmentName)) {
+					return r;
+				}
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Get texture frame by name.
+		/// </summary>
+		/// <returns>The texture frame by name.</returns>
+		/// <param name="frameName">Frame name.</param>
+		public TextureFrame GetTextureFrameByName( string frameName){
+			foreach(TextureFrame frame in textureFrames){
+				if(frame!=null && frame.name.Equals(frameName)){
+					return frame;
+				}
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Changes the sprite frame.
+		/// </summary>
+		/// <param name="spriteFrameName">Will replace SpriteFrame's name.</param>
+		/// <param name="texture">Texture.</param>
+		/// <param name="mat">Mat.</param>
+		public void ChangeSpriteFrame(string spriteFrameName,Texture texture,Material mat=null){
+			if(string.IsNullOrEmpty(spriteFrameName) || !texture) return;
+
+			Renderer attachment = GetAttachmentByName(spriteFrameName);
+			if(!attachment) return;
+			SpriteFrame sf = attachment.GetComponent<SpriteFrame>();
+			ChangeSpriteFrame(sf,texture,mat);
+		}
+
+		/// <summary>
+		/// Changes the sprite frame.
+		/// </summary>
+		/// <param name="sf">Will replace SpriteFrame</param>
+		/// <param name="texture">new Texture.</param>
+		/// <param name="mat">Mat.</param>
+		public void ChangeSpriteFrame(SpriteFrame sf,Texture texture,Material mat=null){
+			if(!sf || !texture) return;
+
+			if(mat) sf.atlasMat = mat;
+			sf.atlasMat.mainTexture = texture;
+			sf.frame.atlasTextureSize=new Vector2(texture.width,texture.height);
+			sf.frame.material = sf.atlasMat;
+			sf.frame.rect.x = 0f;
+			sf.frame.rect.y = 0f;
+			sf.frame.rect.width = texture.width;
+			sf.frame.rect.height = texture.height;
+			sf.frame.frameSize = new Rect(0,0,texture.width,texture.height);
+			sf.frame.isRotated =false;
+			sf.rect = sf.frame.frameSize;
+		}
+
+		/// <summary>
+		/// Changes the sprite frame.
+		/// </summary>
+		/// <param name="spriteFrameName">Sprite frame name.</param>
+		/// <param name="newTextureFrameName">New texture frame name.</param>
+		public void ChangeSpriteFrame(string spriteFrameName, string newTextureFrameName){
+			Renderer attachment = GetAttachmentByName(spriteFrameName);
+			if(!attachment) return;
+
+			SpriteFrame sf = attachment.GetComponent<SpriteFrame>();
+			TextureFrame frame = GetTextureFrameByName(newTextureFrameName);
+			if(sf!=null && frame!=null){
+				sf.atlasMat = frame.material;
+				attachment.sharedMaterial = frame.material;
+				sf.frames[0] = frame;
+				sf.frameName = newTextureFrameName;
+				sf.UpdateVertex();
+			}
+		}
+
+		/// <summary>
+		/// Changes the sprite mesh.
+		/// </summary>
+		/// <param name="spriteMeshName">Will replace SpriteMesh'name.</param>
+		/// <param name="texture">new Texture.</param>
+		/// <param name="mat">Mat.</param>
+		public void ChangeSpriteMesh(string spriteMeshName,Texture texture,Material mat=null){
+			Renderer attachment = GetAttachmentByName(spriteMeshName);
+			if(!attachment) return;
+			SpriteMesh sm = attachment.GetComponent<SpriteMesh>();
+			ChangeSpriteMesh(sm,texture,mat);
+		}
+		/// <summary>
+		/// Changes the sprite mesh.
+		/// </summary>
+		/// <param name="sm">Will replace SpriteMesh</param>
+		/// <param name="texture">new Texture.</param>
+		/// <param name="mat">Mat.</param>
+		public void ChangeSpriteMesh(SpriteMesh sm,Texture texture,Material mat=null){
+			if(!sm || !texture) return;
+
+			if(mat) sm.atlasMat = mat;
+
+			sm.atlasMat.mainTexture = texture;
+			sm.frame.material = sm.atlasMat;
+			sm.frame.texture = texture;
+			sm.frame.isRotated = false;
+
+			sm.frame.rect.x = 0;
+			sm.frame.rect.y = 0;
+			sm.frame.rect.width = texture.width;
+			sm.frame.rect.height = texture.height;
+			sm.frame.frameSize = new Rect(0,0,texture.width,texture.height);
+			sm.frame.atlasTextureSize.x = texture.width;
+			sm.frame.atlasTextureSize.y = texture.height;
+
+			sm.UpdateUV();
+		}
+
+
+		/// <summary>
+		/// Changes the sprite mesh.
+		/// </summary>
+		/// <param name="spriteMeshName">Sprite mesh name.</param>
+		/// <param name="newTextureFrameName">New texture frame name.</param>
+		public void ChangeSpriteMesh(string spriteMeshName, string newTextureFrameName){
+			Renderer attachment = GetAttachmentByName(spriteMeshName);
+			if(!attachment) return;
+
+			SpriteMesh sm = attachment.GetComponent<SpriteMesh>();
+			TextureFrame frame = GetTextureFrameByName(newTextureFrameName);
+			if(sm!=null && frame!=null){
+				sm.atlasMat = frame.material;
+				attachment.sharedMaterial = frame.material;
+				sm.frame = frame;
+				sm.UpdateUV();
+			}
+		}
+
+		/// <summary>
+		/// Changes the sprite renderer.
+		/// </summary>
+		/// <param name="spriteRendererName">Sprite renderer name.</param>
+		/// <param name="texture">Texture.</param>
+		/// <param name="pivot">Pivot.</param>
+		/// <param name="mat">Mat.</param>
+		public void ChangeSpriteRenderer(string spriteRendererName,Texture2D texture,Material mat=null){
+			SpriteRenderer attachment = GetAttachmentByName(spriteRendererName) as SpriteRenderer;
+			if(!attachment) return;
+
+			if(mat!=null) attachment.material = mat;
+
+			Sprite sprite = Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),Vector2.one*0.5f,100f,1,SpriteMeshType.FullRect);
+			attachment.sprite=sprite;
+		}
+
+		/// <summary>
+		/// Changes the sprite renderer.
+		/// </summary>
+		/// <param name="spriteRendererName">Sprite renderer name.</param>
+		/// <param name="sprite">Sprite.</param>
+		/// <param name="mat">Mat.</param>
+		public void ChangeSpriteRenderer(string spriteRendererName,Sprite sprite,Material mat= null){
+			SpriteRenderer attachment = GetAttachmentByName(spriteRendererName) as SpriteRenderer;
+			if(!attachment) return;
+			if(mat!=null) attachment.material = mat;
+			attachment.sprite = sprite;
+		}
+
+		/// <summary>
+		/// Changes the sprite of SpriteRenderer.
+		/// </summary>
+		/// <param name="sr">Will replace SpriteRenderer.</param>
+		/// <param name="sprite">new Sprite.</param>
+		/// <param name="mat">Mat.</param>
+		public void ChangeSpriteRenderer(SpriteRenderer sr,Sprite sprite,Material mat= null){
+			if(mat!=null) sr.material = mat;
+			sr.sprite = sprite;
+		}
+		#endregion
 	}
 }
