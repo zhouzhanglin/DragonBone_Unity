@@ -218,7 +218,16 @@ namespace DragonBone
 						if(slot && skinSlotData.displays!=null && skinSlotData.displays.Length>0){
 							for(int k=0;k<skinSlotData.displays.Length;++k){
 								DragonBoneData.SkinSlotDisplayData displayData= skinSlotData.displays[k];
-								if(displayData.type!="image" && displayData.type!="mesh")  continue;
+								if(displayData.type!="image" && displayData.type!="mesh" &&displayData.type!="boundingBox")  continue;
+
+								if(displayData.type.Equals("boundingBox"))
+								{
+									if(displayData.subType=="polygon")
+									{
+										ShowCustomCollider(displayData,slot,armatureEditor,slotData);
+									}
+									continue;
+								}
 
 								ArmatureEditor.Atlas atlas = armatureEditor.GetAtlasByTextureName(displayData.textureName);
 								if(!armatureEditor.isSingleSprite){
@@ -364,6 +373,37 @@ namespace DragonBone
 			}
 
 		}
+
+		static void ShowCustomCollider(DragonBoneData.SkinSlotDisplayData displayData,Transform slot ,ArmatureEditor armatureEditor,DragonBoneData.SlotData slotData)
+		{
+			if(armatureEditor.genCustomCollider){
+				GameObject go = new GameObject(displayData.textureName);
+				go.transform.parent = slot;
+				Vector3 localPos = Vector3.zero;
+				if(!float.IsNaN(displayData.transform.x)) localPos.x = displayData.transform.x;
+				if(!float.IsNaN(displayData.transform.y)) localPos.y = displayData.transform.y;
+				go.transform.localPosition = localPos;
+
+				Vector3 localSc = Vector3.one;
+				if(!float.IsNaN(displayData.transform.scx)) localSc.x = displayData.transform.scx;
+				if(!float.IsNaN(displayData.transform.scy)) localSc.y = displayData.transform.scy;
+				go.transform.localScale = localSc;
+
+				if(!float.IsNaN(displayData.transform.rotate))
+				{
+					go.transform.localRotation = Quaternion.Euler(0,0,displayData.transform.rotate);
+				}
+
+				PolygonCollider2D collider = go.AddComponent<PolygonCollider2D>();
+				Vector2[] points = new Vector2[displayData.vertices.Length];
+				int len = points.Length;
+				for(int i=0;i<len;++i){
+					points[i] = (Vector2)displayData.vertices[i];
+				}
+				collider.points = points;
+			}
+		}
+
 
 		static void ShowSpriteFrame(SpriteFrame frame,Material mat,DragonBoneData.SkinSlotDisplayData displayData,Transform slot,DragonBoneData.SlotData slotData){
 			SpriteFrame newFrame = (SpriteFrame)GameObject.Instantiate(frame);

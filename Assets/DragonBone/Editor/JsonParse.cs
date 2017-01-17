@@ -238,6 +238,7 @@ namespace DragonBone
 									SimpleJSON.JSONClass displayObj = display[k].AsObject;
 									if(displayObj.ContainKey("name")) displayData.textureName = displayObj["name"].ToString().Replace('/','_');
 									if(displayObj.ContainKey("type")) displayData.type = displayObj["type"].ToString();
+									if(displayObj.ContainKey("subType")) displayData.subType = displayObj["subType"].ToString();
 									if(displayObj.ContainKey("pivot")) {
 										displayData.pivot = new Vector2(displayObj["pivot"].AsObject["x"].AsFloat,displayObj["pivot"].AsObject["y"].AsFloat);
 									}
