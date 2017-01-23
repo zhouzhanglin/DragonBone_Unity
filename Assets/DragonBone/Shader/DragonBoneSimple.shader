@@ -3,6 +3,9 @@
 	Properties
 	{
 		_MainTex ("Texture", 2D) = "white" {}
+
+		[Enum(UnityEngine.Rendering.BlendMode)] _BlendSrc("Src Factor",float)=5
+		[Enum(UnityEngine.Rendering.BlendMode)] _BlendDst("Dst Factor",float)=10
 		[Enum(UnityEngine.Rendering.CullMode)]_CullMode("Cull Mode",float)=0
 	}
 	SubShader
@@ -12,7 +15,7 @@
 		Lighting off
 		Zwrite off
 		Cull [_CullMode]
-		Blend SrcAlpha OneMinusSrcAlpha
+		Blend [_BlendSrc] [_BlendDst]
 
 		Pass
 		{

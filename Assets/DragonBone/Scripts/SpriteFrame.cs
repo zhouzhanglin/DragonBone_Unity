@@ -2,22 +2,18 @@
 using System.Collections;
 #if UNITY_EDITOR
 using UnityEditor;
+using System.IO;
+using System.Collections.Generic;
 #endif
 
 namespace DragonBone
 {
 	/// <summary>
 	/// Sprite frame.
-	/// author:  bingheliefeng
+	/// author:bingheliefeng
 	/// </summary>
 	[ExecuteInEditMode]
 	public class SpriteFrame : MonoBehaviour {
-		[System.Serializable]
-		public class TextureFrame{
-			public string name;
-			public Rect rect;//Texture Size
-			public Rect frameSize;//Real Size
-		}
 
 		public TextAsset atlasText;
 		public Material atlasMat;
@@ -35,7 +31,7 @@ namespace DragonBone
 					int len = frames.Length;
 					for(int i=0;i<len;++i){
 						TextureFrame frame = frames[i];
-						if(frame.name==m_frameName){
+						if(frame.name.Equals(m_frameName)){
 							rect = frame.rect;
 							m_frame = frame;
 							m_displayIndex = i;
@@ -68,20 +64,6 @@ namespace DragonBone
 				}
 			}
 		}
-
-
-		[SerializeField]
-		private Vector2 m_textureSize;
-		public Vector2 textureSize{
-			get { return m_textureSize; }
-			set { 
-				if(!m_textureSize.Equals(value)){
-					m_textureSize = value;
-					if(m_createdMesh)	UpdateUV();
-				}
-			}
-		}
-
 
 		[SerializeField]
 		private Vector2 m_uvOffset;
@@ -122,13 +104,11 @@ namespace DragonBone
 
 		[SerializeField]
 		private Color m_color = Color.white;//For Animation
-		private Color __Color = Color.white;
 		public Color color{
-			get { return __Color;}
+			get { return m_color;}
 			set { 
-				if(!__Color.Equals(value)){
+				if(!m_color.Equals(value)){
 					m_color = value; 
-					__Color = value;
 					if(m_createdMesh)	UpdateVertexColor();
 				}
 			}
@@ -160,12 +140,12 @@ namespace DragonBone
 		}
 
 		[SerializeField]
-		private int m_soringOrder = 0;
-		public int soringOrder{
-			get { return m_soringOrder;}
+		private int m_sortingOrder = 0;
+		public int sortingOrder{
+			get { return m_sortingOrder;}
 			set {	
-				if(m_soringOrder!=value){
-					m_soringOrder=value;
+				if(m_sortingOrder!=value){
+					m_sortingOrder=value;
 					if(m_createdMesh)	UpdateSorting();
 				}
 			}
@@ -187,12 +167,15 @@ namespace DragonBone
 		private MeshFilter m_meshFilter;
 		private MeshRenderer m_meshRenderer;
 		private Mesh m_mesh ;
+		private static Vector3[] m_normals = new Vector3[4]{Vector3.forward,Vector3.forward,Vector3.forward,Vector3.forward};
 
 		void Start(){
 			if(m_createdMesh && m_mesh==null){
 				this.CreateQuad();
 				this.frameName = m_frameName;
 			}
+			if(m_mesh)
+				m_mesh.normals = m_normals;
 		}
 
 		void OnEnable(){
@@ -221,7 +204,6 @@ namespace DragonBone
 			UpdateVertexColor();
 			UpdateSorting();
 			m_mesh.RecalculateBounds();
-			m_mesh.RecalculateNormals();
 			m_createdMesh = true;
 		}
 
@@ -233,56 +215,71 @@ namespace DragonBone
 				UpdateUV();
 				UpdateVertexColor();
 				m_mesh.RecalculateBounds();
+				m_mesh.normals=m_normals;
 			}
 		}
 		#endif
 
-		public void UpdateFrame(){
-			if( m_createdMesh){
-				color = m_color;
-			}
-		}
-
-
 		public void UpdateSorting(){
 			if(m_meshRenderer){
 				m_meshRenderer.sortingLayerName = m_sortingLayerName;
-				m_meshRenderer.sortingOrder = m_soringOrder;
+				m_meshRenderer.sortingOrder = m_sortingOrder;
 			}
 		}
 
 		public void UpdateUV(){
-			if(atlasMat && atlasMat.mainTexture && m_textureSize.x>1 && m_textureSize.y>1){
+			if(m_mesh!=null && m_frame!=null && m_frame.atlasTextureSize.x>1 && m_frame.atlasTextureSize.y>1){
 				Vector2[] rectUV = new Vector2[]{
-					new Vector2(m_rect.x,  m_textureSize.y-m_rect.y-m_rect.height),
-					new Vector2(m_rect.x,  m_textureSize.y-m_rect.y),
-					new Vector2(m_rect.x+m_rect.width,  m_textureSize.y-m_rect.y),
-					new Vector2(m_rect.x+m_rect.width, m_textureSize.y-m_rect.y-m_rect.height),
+					new Vector2(m_rect.x,  m_frame.atlasTextureSize.y-m_rect.y-m_rect.height),
+					new Vector2(m_rect.x,  m_frame.atlasTextureSize.y-m_rect.y),
+					new Vector2(m_rect.x+m_rect.width,  m_frame.atlasTextureSize.y-m_rect.y),
+					new Vector2(m_rect.x+m_rect.width, m_frame.atlasTextureSize.y-m_rect.y-m_rect.height),
 				};
-
-				Vector2[] uv= m_mesh.uv;
+				Vector2[] uvs= m_mesh.uv;
 				for(int i=0;i<4;++i){
-					uv[i]=new Vector2(rectUV[i].x/m_textureSize.x,rectUV[i].y/m_textureSize.y)-m_uvOffset*0.01f;
+					uvs[i] =new Vector2(rectUV[i].x/m_frame.atlasTextureSize.x,rectUV[i].y/m_frame.atlasTextureSize.y)-m_uvOffset*0.01f;
 				}
-				m_mesh.uv = uv;
+				if(m_frame!=null && m_frame.isRotated){
+					rectUV[0] = uvs[3];
+					rectUV[1] = uvs[0];
+					rectUV[2] = uvs[1];
+					rectUV[3] = uvs[2];
+					uvs = rectUV;
+				}
+
+				m_mesh.uv = uvs;
 			}
 		}
 
 		public void UpdateVertex(){
+			float x = 0f;
+			float y = 0f;
+			float w = m_rect.width;
+			float h = m_rect.height;
+			if(m_frame!=null){
+				if(m_frame.isRotated){
+					w = m_rect.height;
+					h = m_rect.width;
+				}
+				Vector3 offset = m_frame.frameOffset*0.01f;
+				x = offset.x;
+				y = offset.y;
+			}
 			Vector3[] verts = m_mesh.vertices;
-			verts[0].x = 0;
-			verts[0].y = 0;
+			verts[0].x = x;
+			verts[0].y = y;
 
-			verts[1].x = 0;
-			verts[1].y = m_rect.height*0.01f ;
+			verts[1].x = x;
+			verts[1].y = y+h*0.01f ;
 
-			verts[2].x = m_rect.width*0.01f;
-			verts[2].y = m_rect.height*0.01f;
+			verts[2].x = x+w*0.01f;
+			verts[2].y = y+h*0.01f;
 
-			verts[3].x = m_rect.width*0.01f;
-			verts[3].y = 0;
+			verts[3].x = x+w*0.01f;
+			verts[3].y = y;
 
-			Vector3 pivot = new Vector3(m_pivot.x*m_rect.width*0.01f,m_pivot.y*m_rect.height*0.01f,0f);
+			Vector3 pivot = new Vector3(m_pivot.x*w*0.01f ,m_pivot.y*h*0.01f,0f);
+
 			for(int i=0;i<4;++i){
 				verts[i]-=pivot;
 			}
@@ -300,21 +297,23 @@ namespace DragonBone
 				m_mesh.colors=colors;
 			}
 		}
-
+		#if UNITY_EDITOR
 
 		public void ParseAtlasText(){
 			if(atlasText!=null && atlasMat!=null && atlasMat.mainTexture!=null)
 			{
-				m_textureSize = new Vector2(atlasMat.mainTexture.width,atlasMat.mainTexture.height);
-
-				SimpleJSON.JSONClass obj = SimpleJSON.JSON.Parse(atlasText.text).AsObject;
+				SimpleJSON.JSONClass obj = SimpleJSON.JSON.Parse(atlasText.text).AsObject ;
 				SimpleJSON.JSONArray arr = obj["SubTexture"].AsArray;
-				frames = new SpriteFrame.TextureFrame[arr.Count];
+				frames = new TextureFrame[arr.Count];
+				Vector2 textureSize = new Vector2(atlasMat.mainTexture.width,atlasMat.mainTexture.height);
 				for(int i=0;i<arr.Count;++i){
 					SimpleJSON.JSONClass frameObj = arr[i].AsObject;
-					SpriteFrame.TextureFrame frame = new SpriteFrame.TextureFrame();
+					TextureFrame frame = new TextureFrame();
+					frame.atlasTextureSize = textureSize;
 					frame.name = frameObj["name"];
 					frame.name = frame.name.Replace('/','_');
+					frame.texture = atlasMat.mainTexture;
+					frame.material = atlasMat;
 					Rect rect = new Rect();
 					rect.x = frameObj["x"].AsFloat*textureScale;
 					rect.y = frameObj["y"].AsFloat*textureScale;
@@ -322,24 +321,24 @@ namespace DragonBone
 					rect.height = frameObj["height"].AsFloat*textureScale;
 					Rect frameSize=new Rect(0,0,rect.width,rect.height);
 					if(frameObj.ContainKey("frameX")){
-						frame.frameSize.width = frameObj["frameX"].AsFloat*textureScale;
+						frameSize.x = frameObj["frameX"].AsFloat*textureScale;
 					}
 					if(frameObj.ContainKey("frameY")){
-						frame.frameSize.width = frameObj["frameY"].AsFloat*textureScale;
+						frameSize.y = frameObj["frameY"].AsFloat*textureScale;
 					}
 					if(frameObj.ContainKey("frameWidth")){
-						frame.frameSize.width = frameObj["frameWidth"].AsFloat*textureScale;
+						frameSize.width = frameObj["frameWidth"].AsFloat*textureScale;
 					}
 					if(frameObj.ContainKey("frameHeight")){
-						frame.frameSize.width = frameObj["frameHeight"].AsFloat*textureScale;
+						frameSize.height = frameObj["frameHeight"].AsFloat*textureScale;
 					}
 					frame.rect = rect;
-					frameSize = new Rect(frameSize.x*0.01f,frameSize.y*0.01f,frameSize.width*0.01f,frameSize.height*0.01f);
 					frame.frameSize = frameSize;
 					frames[i] = frame;
 				}
 			}
 		}
+		#endif
 
 		/// <summary>
 		/// Get TextureFrame By Name
@@ -368,10 +367,10 @@ namespace DragonBone
 					Matrix4x4 oldGizmosMatrix = Gizmos.matrix;
 					Gizmos.matrix *= cubeTransform;
 					Gizmos.DrawWireCube(new Vector3(
-						m_frame.frameSize.x*0.01f-m_pivot.x*m_frame.frameSize.width+m_frame.frameSize.width*0.5f,
-						m_frame.frameSize.y*0.01f-m_pivot.y*m_frame.frameSize.height+m_frame.frameSize.height*0.5f,
+						-m_pivot.x*m_frame.frameSize.width*0.01f+m_frame.frameSize.width*0.005f,
+						-m_pivot.y*m_frame.frameSize.height*0.01f+m_frame.frameSize.height*0.005f,
 						0
-					),new Vector3(m_frame.frameSize.width,m_frame.frameSize.height,0.1f));
+					),new Vector3(m_frame.frameSize.width*0.01f,m_frame.frameSize.height*0.01f,0.1f));
 					Gizmos.matrix = oldGizmosMatrix;
 				}
 			}

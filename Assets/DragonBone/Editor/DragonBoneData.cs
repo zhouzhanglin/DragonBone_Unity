@@ -23,6 +23,7 @@ namespace DragonBone
 			public int displayIndex=0;
 			public float z;
 			public float scale =1f;//缩放值，默认为1
+			public string blendMode = "normal";
 			public ColorData color;
 		}
 		public class IKData{
@@ -55,6 +56,15 @@ namespace DragonBone
 		public class ColorData{
 			public float aM=1f,rM=1f,gM=1f,bM = 1f; //颜色叠加 0-1
 			public float a0=0f,r0=0f,g0=0f,b0 =0f;//颜色偏移-1 - 1
+
+			public Color ToColor(){
+				Color c = Color.white;
+				c.a = aM+a0;
+				c.r = rM+r0;
+				c.g = gM+g0;
+				c.b = bM+b0;
+				return c;
+			}
 		}
 
 		public class AnimationData {
@@ -65,6 +75,7 @@ namespace DragonBone
 			public AnimSubData[] boneDatas;
 			public AnimSubData[] slotDatas;
 			public AnimSubData[] ffdDatas;
+			public AnimSubData[] zOrderDatas;
 		}
 		public class AnimKeyData{ //此动画包含的关键帧数据
 			public int duration = 1;
@@ -75,7 +86,6 @@ namespace DragonBone
 		public class AnimSubData{
 			public string name;//slotname , bone name
 			public string slot;//如果有slot，就用slot
-			public int duration = 1;
 			public float scale=1f;
 			public float offset=0f;
 			public AnimFrameData[] frameDatas;
@@ -83,7 +93,9 @@ namespace DragonBone
 		public class AnimFrameData { //此动画包含的关键帧列表
 			public int duration = 1;
 			public float[] curve;
+			public int[] zOrder;
 			public float tweenEasing=float.PositiveInfinity;
+			public int tweenRotate = 0 ;//转的圈数
 			public int displayIndex=0;
 			public float z;
 			public TransformData transformData ;
@@ -105,10 +117,10 @@ namespace DragonBone
 		}
 		public class SkinSlotDisplayData{
 			public string textureName;
-			public string type = "image";//armature,mesh
+			public string type = "image";//armature,mesh,boundingBox
+			public string subType="polygon";
 			public Vector2 pivot = new Vector2(0.5f,0.5f);
 			public TransformData transform;
-			public ColorData color;
 
 			//网格变化
 			public Vector3[] vertices;
@@ -121,6 +133,7 @@ namespace DragonBone
 		}
 		public class ArmatureData{
 			public string name;
+			public string type="Armature";//MovieClip
 			public int isGlobal = 0 ;
 			public float frameRate = 24 ;
 			public BoneData[] boneDatas;

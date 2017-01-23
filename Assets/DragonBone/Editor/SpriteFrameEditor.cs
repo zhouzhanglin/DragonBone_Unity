@@ -79,7 +79,6 @@ namespace DragonBone
 			}
 			EditorGUILayout.EndVertical();
 			EditorGUILayout.Space();
-			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_textureSize"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_uvOffset"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_pivot"), true);
 			if(sprite.frames!=null && !string.IsNullOrEmpty(sprite.frameName)){
@@ -94,7 +93,7 @@ namespace DragonBone
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_color"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_brightness"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_sortingLayerName"), true);
-			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_soringOrder"), true);
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_sortingOrder"), true);
 			serializedObject.ApplyModifiedProperties();
 		}
 

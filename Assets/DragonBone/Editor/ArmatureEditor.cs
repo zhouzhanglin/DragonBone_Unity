@@ -19,9 +19,11 @@ namespace DragonBone
 		}
 
 		[Header("Setting")]
+		public bool genCustomCollider = true;//custom collider
 		public float zoffset = 0.003f;
 		public bool useUnitySprite = false; //is used Unity Sprite2D
 		public bool isSingleSprite = false;//is atlas textrue
+		public string texturesFolderName = "";
 
 		[Header("Anim File")]
 		public TextAsset animTextAsset;
@@ -61,20 +63,96 @@ namespace DragonBone
 		public Dictionary<string,Matrix2D> bonePoseKV = new Dictionary<string, Matrix2D>() ; //bonePose , key is bone name
 		public Dictionary<string,bool> ffdKV = new Dictionary<string, bool>();//skinnedMesh animation or ffd animation, key is skin name/texture name
 
+		public Dictionary<Material,bool> spriteMeshUsedMatKV = new Dictionary<Material, bool>();
+
 		[HideInInspector]
 		public List<Transform> bones = new List<Transform>();
+		[HideInInspector]
+		public List<Slot> slots = new List<Slot>();
 
+		[MenuItem("Assets/DragonBone/DragonBone Panel (All Function)")]
 		[MenuItem("DragonBone/DragonBone Panel (All Function)")]
 		static void CreateWizard () {
 			ArmatureEditor editor = ScriptableWizard.DisplayWizard<ArmatureEditor>("Create DragonBone", "Create");
 			editor.minSize = new Vector2(200f,400f);
+
+			if(Selection.activeObject is DefaultAsset)
+			{
+				string dirPath = AssetDatabase.GetAssetOrScenePath(Selection.activeObject);
+				if(Directory.Exists(dirPath)){
+					string animJsonPath=null;
+					Dictionary<string,string> texturePathKV = new Dictionary<string, string>();
+					Dictionary<string,string> textureJsonPathKV = new Dictionary<string, string>();
+					foreach (string path in Directory.GetFiles(dirPath))
+					{  
+						if(path.LastIndexOf(".meta")==-1){
+							if( System.IO.Path.GetExtension(path) == ".json" && (path.IndexOf("_tex")>-1 || path.IndexOf("texture")>-1) ){
+								int start = path.LastIndexOf("/")+1;
+								int end = path.LastIndexOf(".json");
+								textureJsonPathKV[path.Substring(start,end-start)] = path;
+								continue;
+							}
+							if( System.IO.Path.GetExtension(path) == ".png" && (path.IndexOf("_tex")>-1 || path.IndexOf("texture")>-1) ){
+								int start = path.LastIndexOf("/")+1;
+								int end = path.LastIndexOf(".png");
+								texturePathKV[path.Substring(start,end-start)] = path;
+								continue;
+							}
+							if ( System.IO.Path.GetExtension(path) == ".json" && (path.IndexOf("_ske")>-1 || path.IndexOf("texture.json")==-1)) {
+								animJsonPath = path;
+							}
+
+						}
+
+					} 
+
+					if(!string.IsNullOrEmpty(animJsonPath)) editor.animTextAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(animJsonPath);
+
+					if( texturePathKV.Count>0 && textureJsonPathKV.Count>0){
+						List<Atlas> atlasList = new List<Atlas>();
+						foreach(string name in texturePathKV.Keys){
+							if(textureJsonPathKV.ContainsKey(name)){
+								if(editor.altasTexture==null){
+									editor.altasTextAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(textureJsonPathKV[name]);
+									editor.altasTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePathKV[name]);
+								}else{
+									Atlas atlas = new Atlas();
+									atlas.atlasText = AssetDatabase.LoadAssetAtPath<TextAsset>(textureJsonPathKV[name]);
+									atlas.texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePathKV[name]);
+									atlasList.Add(atlas);
+								}
+							}
+						}
+						editor.otherTextures = atlasList.ToArray();
+					}
+					else
+					{
+						string texturesFolder = "";
+						foreach(string path in Directory.GetDirectories(dirPath)){
+							if(path.IndexOf("texture")>-1){
+								editor.texturesFolderName = path.Substring(path.LastIndexOf("/")+1);
+								texturesFolder = path;
+								break;
+							}
+						}
+						if(!string.IsNullOrEmpty(texturesFolder)){
+							string[] paths = Directory.GetFiles(texturesFolder);
+							if(paths.Length>0){
+								editor.isSingleSprite = true;
+							}
+						}
+					}
+				}
+			}
 		}
 
+		[MenuItem("Assets/DragonBone/DragonBone (SpriteFrame)")]
 		[MenuItem("DragonBone/DragonBone (SpriteFrame)")]
 		static void CreateDragbonBoneByDir_SpriteFrame()
 		{
 			CreateDragonBoneByDir(false);
 		}
+		[MenuItem("Assets/DragonBone/DragonBone (UnitySprite)")]
 		[MenuItem("DragonBone/DragonBone (UnitySprite)")]
 		static void CreateDragbonBoneByDir_UnitySprite()
 		{
@@ -91,21 +169,22 @@ namespace DragonBone
 					Dictionary<string,string> textureJsonPathKV = new Dictionary<string, string>();
 					foreach (string path in Directory.GetFiles(dirPath))
 					{  
-						if(System.IO.Path.GetExtension(path) == ".json" && path.IndexOf("texture")>-1 && path.LastIndexOf(".meta")==-1){
-							int start = path.LastIndexOf("/")+1;
-							int end = path.LastIndexOf(".json");
-							textureJsonPathKV[path.Substring(start,end-start)] = path;
-							continue;
-						}
-						if(System.IO.Path.GetExtension(path) == ".png" && path.IndexOf("texture")>-1 && path.LastIndexOf(".meta")==-1){
-							int start = path.LastIndexOf("/")+1;
-							int end = path.LastIndexOf(".png");
-							texturePathKV[path.Substring(start,end-start)] = path;
-							continue;
-						}
-						if (path.IndexOf("texture.json")==-1 && System.IO.Path.GetExtension(path) == ".json" && path.LastIndexOf(".meta")==-1)  
-						{  
-							animJsonPath = path;
+						if(path.LastIndexOf(".meta")==-1){
+							if( System.IO.Path.GetExtension(path) == ".json" && (path.IndexOf("_tex")>-1 || path.IndexOf("texture")>-1) ){
+								int start = path.LastIndexOf("/")+1;
+								int end = path.LastIndexOf(".json");
+								textureJsonPathKV[path.Substring(start,end-start)] = path;
+								continue;
+							}
+							if( System.IO.Path.GetExtension(path) == ".png" && (path.IndexOf("_tex")>-1 || path.IndexOf("texture")>-1) ){
+								int start = path.LastIndexOf("/")+1;
+								int end = path.LastIndexOf(".png");
+								texturePathKV[path.Substring(start,end-start)] = path;
+								continue;
+							}
+							if ( System.IO.Path.GetExtension(path) == ".json" && (path.IndexOf("_ske")>-1 || path.IndexOf("texture.json")==-1)) {
+								animJsonPath = path;
+							}
 						}
 					} 
 					if(!string.IsNullOrEmpty(animJsonPath) && texturePathKV.Count>0 && textureJsonPathKV.Count>0){
@@ -187,7 +266,7 @@ namespace DragonBone
 			if(useUnitySprite && isSingleSprite && spriteKV.Count==0){
 				string spritesPath = AssetDatabase.GetAssetPath(animTextAsset);
 				spritesPath = spritesPath.Substring(0,spritesPath.LastIndexOf('.'));
-				spritesPath = spritesPath.Substring(0,spritesPath.LastIndexOf('/'))+"/texture";
+				spritesPath = spritesPath.Substring(0,spritesPath.LastIndexOf('/'))+"/"+texturesFolderName;
 				if(Directory.Exists(spritesPath))
 				{
 					foreach (string path in Directory.GetFiles(spritesPath))  
@@ -229,31 +308,28 @@ namespace DragonBone
 			ShowArmature.ShowSkins(this);
 			ShowArmature.SetIKs(this);
 			AnimFile.CreateAnimFile(this);
+
 			DragonBoneArmature dba = _armature.GetComponent<DragonBoneArmature>();
-			if(dba && (dba.updateMeshs == null || dba.updateMeshs.Length==0) 
-				&& (dba.updateFrames==null || dba.updateFrames.Length==0)){
-				Object.DestroyImmediate(dba);
+
+			//update slot display
+			for(int s=0;s<slots.Count;++s){
+				slots[s].displayIndex = slots[s].displayIndex;
 			}
 
 			Renderer[] renders = _armature.GetComponentsInChildren<Renderer>();
 			foreach(Renderer r in renders){
-				if(!r.enabled){
-					r.enabled = true;
-					r.gameObject.SetActive(false);
-				}
-				else if(r.GetComponent<SpriteMesh>()!=null)
-				{
-					for(int i=0;i<r.transform.childCount;++i){
-						r.transform.GetChild(i).gameObject.SetActive(false);
-					}
-				}
-				else if(r.GetComponent<SpriteFrame>()){
+				if(r.GetComponent<SpriteFrame>()){
 					//optimize memory
 					SpriteFrame sf = r.GetComponent<SpriteFrame>();
-					SpriteFrame.TextureFrame tf = sf.frame;
-					sf.frames=new SpriteFrame.TextureFrame[]{tf};
+					TextureFrame tf = sf.frame;
+					sf.frames=new TextureFrame[]{tf};
 				}
 			}
+			dba.attachments = renders;
+			dba.slots = slots.ToArray();
+			dba.zSpace = zoffset;
+			dba.ResetSlotZOrder();
+
 			string path = AssetDatabase.GetAssetPath(animTextAsset);
 			path = path.Substring(0,path.LastIndexOf('/'))+"/"+_armature.name+".prefab";
 			GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);

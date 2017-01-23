@@ -32,7 +32,6 @@ namespace DragonBone
 		{
 			SimpleJSON.JSONClass json=SimpleJSON.JSON.Parse(armatureEditor.animTextAsset.text.Replace("null","\"null\"")).AsObject;
 			SimpleJSON.JSONArray armtureArr = json["armature"].AsArray;
-
 			for(int i=0;i<armtureArr.Count;++i)
 			{
 				armatureEditor.armatureData = new DragonBoneData.ArmatureData();
@@ -41,6 +40,7 @@ namespace DragonBone
 				armatureEditor.armature = go.transform;
 				armatureEditor.bonesKV.Clear();
 				armatureEditor.slotsKV.Clear();
+				armatureEditor.slots.Clear();
 				armatureEditor.bonesDataKV.Clear();
 				armatureEditor.slotsDataKV.Clear();
 				armatureEditor.bones.Clear();
@@ -49,14 +49,17 @@ namespace DragonBone
 
 				SimpleJSON.JSONClass armtureObj = armtureArr[i].AsObject;
 				if(armtureObj.ContainKey("name")){
-					string armatureName = armtureObj["name"].ToString();
+					string armatureName = armtureObj["name"].ToString().Trim();
 					armatureEditor.armature.name = armatureName;
-					ParseArmtureData(armatureEditor,armtureObj);
+				}
+				if(armtureObj.ContainKey("type")){
+					armatureEditor.armatureData.type = armtureObj["type"].ToString();
 				}
 				if(armtureObj.ContainKey("frameRate")){
 					armatureEditor.armatureData.frameRate = armtureObj["frameRate"].AsFloat;
 					if(armatureEditor.armatureData.frameRate==0) armatureEditor.armatureData.frameRate = 24;//db默认为24
 				}
+				ParseArmtureData(armatureEditor,armtureObj);
 				armatureEditor.InitShow();
 			}
 
@@ -72,7 +75,7 @@ namespace DragonBone
 					SimpleJSON.JSONClass boneObj = bones[i].AsObject;
 					DragonBoneData.BoneData boneData = new DragonBoneData.BoneData();
 					if(boneObj.ContainKey("length"))  boneData.length = boneObj["length"].AsFloat;
-					if(boneObj.ContainKey("name"))  boneData.name = boneObj["name"].ToString();
+					if(boneObj.ContainKey("name"))  boneData.name = boneObj["name"].ToString().Trim();
 					if(boneObj.ContainKey("parent"))  boneData.parent = boneObj["parent"].ToString();
 					if(boneObj.ContainKey("inheritRotation")) boneData.inheritRotation = boneObj["inheritRotation"].AsInt==1?true:false;
 					if(boneObj.ContainKey("inheritScale")) boneData.inheritScale = boneObj["inheritScale"].AsInt==1?true:false;
@@ -96,14 +99,18 @@ namespace DragonBone
 			if(armtureObj.ContainKey("slot")){
 				SimpleJSON.JSONArray slots = armtureObj["slot"].AsArray;
 				DragonBoneData.SlotData[] slotDatas = new DragonBoneData.SlotData[slots.Count];
+				bool isMC = armatureEditor.armatureData.type.Equals("MovieClip");
 				for(int i=0;i<slots.Count;++i){
 					SimpleJSON.JSONClass slotObj = slots[i].AsObject;
 					DragonBoneData.SlotData slotData=new DragonBoneData.SlotData();
 					if(slotObj.ContainKey("name"))  slotData.name = slotObj["name"].ToString();
 					if(slotObj.ContainKey("parent"))  slotData.parent = slotObj["parent"].ToString();
 					if(slotObj.ContainKey("z"))  slotData.z = -slotObj["z"].AsFloat*armatureEditor.zoffset;
-					if(slotObj.ContainKey("displayIndex")) slotData.displayIndex = slotObj["displayIndex"].AsInt;
+					if(!isMC){
+						if(slotObj.ContainKey("displayIndex")) slotData.displayIndex = slotObj["displayIndex"].AsInt;
+					}
 					if(slotObj.ContainKey("scale")) slotData.scale = slotObj["scale"].AsFloat;
+					if(slotObj.ContainKey("blendMode")) slotData.blendMode = slotObj["blendMode"].ToString();
 					if(slotObj.ContainKey("color"))
 					{
 						SimpleJSON.JSONClass colorObj = slotObj["color"].AsObject;
@@ -168,7 +175,7 @@ namespace DragonBone
 				for(int i=0;i<anims.Count;++i){
 					SimpleJSON.JSONClass animObj = anims[i].AsObject;
 					DragonBoneData.AnimationData animData=new DragonBoneData.AnimationData();
-					if(animObj.ContainKey("name"))  animData.name = animObj["name"].ToString();
+					if(animObj.ContainKey("name"))  animData.name = animObj["name"].ToString().Trim();
 					if(animObj.ContainKey("playTimes"))  animData.playTimes = animObj["playTimes"].AsInt;
 					if(animObj.ContainKey("duration"))  animData.duration = animObj["duration"].AsInt;
 					if(animData.duration==0) animData.duration =1;
@@ -190,6 +197,11 @@ namespace DragonBone
 						SimpleJSON.JSONArray ffds = animObj["ffd"].AsArray;
 						animData.ffdDatas = new DragonBoneData.AnimSubData[ffds.Count];
 						ParsetAnimBoneSlot(armatureEditor, ffds , animData.ffdDatas );
+					}
+					//zOrder
+					if(animObj.ContainKey("zOrder")){
+						SimpleJSON.JSONClass zOrders = animObj["zOrder"].AsObject;
+						ParseAnimSortOrder(armatureEditor, zOrders , animData );
 					}
 					animDatas[i] = animData;
 				}
@@ -226,6 +238,7 @@ namespace DragonBone
 									SimpleJSON.JSONClass displayObj = display[k].AsObject;
 									if(displayObj.ContainKey("name")) displayData.textureName = displayObj["name"].ToString().Replace('/','_');
 									if(displayObj.ContainKey("type")) displayData.type = displayObj["type"].ToString();
+									if(displayObj.ContainKey("subType")) displayData.subType = displayObj["subType"].ToString();
 									if(displayObj.ContainKey("pivot")) {
 										displayData.pivot = new Vector2(displayObj["pivot"].AsObject["x"].AsFloat,displayObj["pivot"].AsObject["y"].AsFloat);
 									}
@@ -331,6 +344,34 @@ namespace DragonBone
 			}
 		}
 
+		private static void ParseAnimSortOrder(ArmatureEditor armatureEditor, SimpleJSON.JSONClass zOrders  ,DragonBoneData.AnimationData animData){
+			if(zOrders.ContainKey("frame")){
+				//just only one
+				DragonBoneData.AnimSubData subData = new DragonBoneData.AnimSubData();
+				animData.zOrderDatas = new DragonBoneData.AnimSubData[1]{subData};
+				if(zOrders.ContainKey("offset")) subData.offset = zOrders["offset"].AsFloat;
+
+				SimpleJSON.JSONArray frames = zOrders["frame"].AsArray;
+				subData.frameDatas = new DragonBoneData.AnimFrameData[frames.Count];
+				for(int i=0;i<frames.Count;++i){
+					SimpleJSON.JSONClass frameObj = frames[i].AsObject;
+					DragonBoneData.AnimFrameData frameData = new DragonBoneData.AnimFrameData();
+					subData.frameDatas[i] = frameData;
+
+					if(frameObj.ContainKey("duration")) frameData.duration = frameObj["duration"].AsInt;
+					if(frameObj.ContainKey("zOrder")){
+						SimpleJSON.JSONArray zs = frameObj["zOrder"].AsArray;
+						if(zs!=null){
+							frameData.zOrder = new int[zs.Count];
+							for(int z=0;z<zs.Count;++z){
+								frameData.zOrder[z] = zs[z].AsInt;
+							}
+						}
+					}
+				}
+			}
+		}
+
 		public static void ParseAnimFrames( SimpleJSON.JSONArray animFrames ,DragonBoneData.AnimationData animData){
 			animData.keyDatas = new DragonBoneData.AnimKeyData[animFrames.Count];
 			for(int i=0;i<animFrames.Count;++i){
@@ -363,6 +404,7 @@ namespace DragonBone
 						if(frameObj.ContainKey("displayIndex")) frameData.displayIndex = frameObj["displayIndex"].AsInt;
 						if(frameObj.ContainKey("z")) frameData.z = -frameObj["z"].AsInt*armatureEditor.zoffset;
 						if(frameObj.ContainKey("tweenEasing") && frameObj["tweenEasing"].ToString()!="null") frameData.tweenEasing = frameObj["tweenEasing"].AsFloat;
+						if(frameObj.ContainKey("tweenRotate")) frameData.tweenRotate = frameObj["tweenRotate"].AsInt;
 						if(frameObj.ContainKey("curve")){
 							SimpleJSON.JSONArray curves = frameObj["curve"].AsArray;
 							frameData.curve = new float[4]{curves[0].AsFloat,curves[1].AsFloat,curves[2].AsFloat,curves[3].AsFloat};
@@ -420,21 +462,30 @@ namespace DragonBone
 
 						//ffd animation
 						//vertex offset
+						bool startFromY = false;
 						if(frameObj.ContainKey("offset")){
+							startFromY = frameObj["offset"].AsInt%2!=0;//从Y开始
 							frameData.offset = frameObj["offset"].AsInt/2;
 						}
 						if(frameObj.ContainKey("vertices")){ //local vertex
 							SimpleJSON.JSONArray verticesObj = frameObj["vertices"].AsArray;
-							frameData.vertices = new Vector2[verticesObj.Count/2];
 							int index=0;
-							for(int k=0;k<verticesObj.Count && k+1<verticesObj.Count;k+=2)
+							int k= 0;
+							if(startFromY) {
+								frameData.vertices = new Vector2[verticesObj.Count/2+1];
+								frameData.vertices[index]=new Vector2(0,-verticesObj[k].AsFloat*0.01f);
+								k = 1;
+								++index;
+							}else{
+								frameData.vertices = new Vector2[verticesObj.Count/2];
+							}
+							for(;k<verticesObj.Count && k+1<verticesObj.Count;k+=2)
 							{
 								frameData.vertices[index]=new Vector2(verticesObj[k].AsFloat*0.01f,-verticesObj[k+1].AsFloat*0.01f);
 								++index;
 							}
 							armatureEditor.ffdKV[subData.name] = true;
 						}
-
 						subData.frameDatas[j] = frameData;
 					}
 				}
