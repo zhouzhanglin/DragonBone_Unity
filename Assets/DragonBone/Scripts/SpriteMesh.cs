@@ -132,6 +132,7 @@ namespace DragonBone
 		}
 
 		void OnEnable(){
+			UpdateMesh();
 			UpdateVertexColor();
 		}
 
