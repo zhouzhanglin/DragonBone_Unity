@@ -76,9 +76,12 @@ namespace DragonBone
 			ArmatureEditor editor = ScriptableWizard.DisplayWizard<ArmatureEditor>("Create DragonBone", "Create");
 			editor.minSize = new Vector2(200f,400f);
 
-			if(Selection.activeObject is DefaultAsset)
+			if(Selection.activeObject != null)
 			{
 				string dirPath = AssetDatabase.GetAssetOrScenePath(Selection.activeObject);
+				if(File.Exists(dirPath)){
+					dirPath = dirPath.Substring(0,dirPath.LastIndexOf("/"));
+				}
 				if(Directory.Exists(dirPath)){
 					string animJsonPath=null;
 					Dictionary<string,string> texturePathKV = new Dictionary<string, string>();
@@ -160,9 +163,12 @@ namespace DragonBone
 		}
 
 		static void CreateDragonBoneByDir(bool useUnitySprite){
-			if(Selection.activeObject is DefaultAsset)
+			if(Selection.activeObject != null)
 			{
 				string dirPath = AssetDatabase.GetAssetOrScenePath(Selection.activeObject);
+				if(File.Exists(dirPath)){
+					dirPath = dirPath.Substring(0,dirPath.LastIndexOf("/"));
+				}
 				if(Directory.Exists(dirPath)){
 					string animJsonPath=null;
 					Dictionary<string,string> texturePathKV = new Dictionary<string, string>();
