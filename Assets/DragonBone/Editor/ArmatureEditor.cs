@@ -322,7 +322,7 @@ namespace DragonBone
 				slots[s].displayIndex = slots[s].displayIndex;
 			}
 
-			Renderer[] renders = _armature.GetComponentsInChildren<Renderer>();
+			Renderer[] renders = _armature.GetComponentsInChildren<Renderer>(true);
 			foreach(Renderer r in renders){
 				if(r.GetComponent<SpriteFrame>()){
 					//optimize memory
