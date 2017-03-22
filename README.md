@@ -6,7 +6,7 @@ Dragon Bone是一款免费的动画制作工具，下载地址[http://dragonbone
 2.(自动)选中动画文件夹->打开Unity菜单栏 -> DragonBone -> DragonBone(SpriteFrame)/(UnitySprite)<br/>     
 #功能限制说明
 暂时不支持的有: 1）骨架嵌套(一个骨架里包含另一个骨架)    2）IK嵌套可能有问题<br/>
-由于unity动画限制，所以此插件不支持nonInheritRotations，nonInheritScales (也就是DragonBone编辑器里这两个属性必须勾选)<br/>
+3) 不支持曲线中使用多控制点，只会取前面和最后面一个点<br/>
 #注意事项
 在龙骨做绑定时，同一层级的骨骼和插槽名称不能相同<br/>
 如果你只想使用spine的运行库，可以使用[DragonBoneToSpineData](http://git.oschina.net/bingheliefeng/DragonBoneToSpineData)
