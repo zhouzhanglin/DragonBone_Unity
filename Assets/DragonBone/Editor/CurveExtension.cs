@@ -80,7 +80,10 @@ namespace CurveExtended{
 				curr += 360;
 			}
 			if (rotatecurve.keys[f].value != curr){
-				rotatecurve.MoveKey(f, new Keyframe(rotatecurve.keys[f].time , curr));
+				TangentMode modeIn = KeyframeUtil.GetKeyTangentMode(rotatecurve.keys[f-1].tangentMode,(int)rotatecurve.keys[f-1].inTangent);
+				TangentMode modeOut = KeyframeUtil.GetKeyTangentMode(rotatecurve.keys[f-1].tangentMode,(int)rotatecurve.keys[f-1].outTangent);
+				if(f==rotatecurve.length-1) modeIn = TangentMode.Linear;
+				rotatecurve.MoveKey(f, KeyframeUtil.GetNew(rotatecurve.keys[f].time , curr,modeIn,modeOut ));
 			}
 		}
 
