@@ -143,6 +143,10 @@ namespace DragonBone
 							int slotIdx = frameData.zOrder[z];
 							int changeZ = frameData.zOrder[z+1];
 							Slot slot = armatureEditor.slots[slotIdx];
+
+							int temp = slotIdx+changeZ;
+							if(temp<0) changeZ += slotIdx;
+
 							string path = "";
 							if(slotPathKV.ContainsKey(slot.name)){
 								path = slotPathKV[slot.name];
