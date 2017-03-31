@@ -52,8 +52,8 @@ namespace DragonBone
 					clip.name = animationData.name;
 					clip.frameRate = armatureEditor.armatureData.frameRate;
 
-					CreateBoneAnim(armatureEditor ,clip,animationData.boneDatas , armatureEditor.bonesKV);
 					CreateSlotAnim(armatureEditor ,clip,animationData.slotDatas , armatureEditor.slotsKV );
+					CreateBoneAnim(armatureEditor ,clip,animationData.boneDatas , armatureEditor.bonesKV);
 					CreateFFDAnim(armatureEditor ,clip,animationData.ffdDatas , armatureEditor.slotsKV);
 					CreateAnimZOrder	(armatureEditor,clip,animationData.zOrderDatas);
 					SetEvent(armatureEditor,clip,animationData.keyDatas);
@@ -145,7 +145,7 @@ namespace DragonBone
 							Slot slot = armatureEditor.slots[slotIdx];
 
 							int temp = slotIdx+changeZ;
-							if(temp<0) changeZ += slotIdx;
+							if(temp<0) changeZ = -temp;
 
 							string path = "";
 							if(slotPathKV.ContainsKey(slot.name)){
@@ -500,6 +500,9 @@ namespace DragonBone
 				}else{
 					path = GetNodeRelativePath(armatureEditor,boneNode) ;
 					bonePathKV[boneName] = path;
+					if(slotPathKV.ContainsKey(boneName) && slotPathKV[boneName].Equals(path)){
+						Debug.LogError("Bone2D Error: Same Bone And Slot ->"+boneName);
+					}
 				}
 				bool localPosFlag = false;
 				if(xcurve.keys !=null && xcurve.keys.Length>0 && CheckCurveValid(xcurve,boneNode.localPosition.x)) localPosFlag = true;

@@ -27,6 +27,8 @@ namespace DragonBone
 		private SpriteMesh m_SpriteMesh = null;
 		private SpriteRenderer m_SpriteRenderer = null;
 
+		[HideInInspector]
+		[SerializeField]
 		private int __z=0;
 		[HideInInspector]
 		[SerializeField]
@@ -39,8 +41,9 @@ namespace DragonBone
 			}
 		}
 
-		protected int __displayIndex;
 		[HideInInspector]
+		[SerializeField]
+		protected int __displayIndex;
 		[SerializeField]
 		private float m_DisplayIndex;
 		public int displayIndex{
