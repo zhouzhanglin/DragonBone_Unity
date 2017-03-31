@@ -53,7 +53,9 @@ namespace DragonBone
 					clip.frameRate = armatureEditor.armatureData.frameRate;
 
 					CreateSlotAnim(armatureEditor ,clip,animationData.slotDatas , armatureEditor.slotsKV );
-					CreateBoneAnim(armatureEditor ,clip,animationData.boneDatas , armatureEditor.bonesKV);
+					bool success = CreateBoneAnim(armatureEditor ,clip,animationData.boneDatas , armatureEditor.bonesKV);
+					if(!success ) return;
+
 					CreateFFDAnim(armatureEditor ,clip,animationData.ffdDatas , armatureEditor.slotsKV);
 					CreateAnimZOrder	(armatureEditor,clip,animationData.zOrderDatas);
 					SetEvent(armatureEditor,clip,animationData.keyDatas);
@@ -373,9 +375,9 @@ namespace DragonBone
 			}
 		}
 
-		static void CreateBoneAnim(ArmatureEditor armatureEditor, AnimationClip clip , DragonBoneData.AnimSubData[] subDatas , Dictionary<string,Transform> transformKV)
+		static bool CreateBoneAnim(ArmatureEditor armatureEditor, AnimationClip clip , DragonBoneData.AnimSubData[] subDatas , Dictionary<string,Transform> transformKV)
 		{
-			if(subDatas==null) return;
+			if(subDatas==null) return true;
 			Dictionary<string,string> bonePathKV = new Dictionary<string, string>();
 			for(int i=0;i<subDatas.Length;++i)
 			{
@@ -501,7 +503,8 @@ namespace DragonBone
 					path = GetNodeRelativePath(armatureEditor,boneNode) ;
 					bonePathKV[boneName] = path;
 					if(slotPathKV.ContainsKey(boneName) && slotPathKV[boneName].Equals(path)){
-						Debug.LogError("Bone2D Error: Same Bone And Slot ->"+boneName);
+						Debug.LogError("Bone2D Error: Name conflict ->"+path);
+						return false;
 					}
 				}
 				bool localPosFlag = false;
@@ -535,6 +538,7 @@ namespace DragonBone
 					clip.SetCurve(path,typeof(Transform),"localEulerAngles.z",rotatecurve);
 				}
 			}
+			return true;
 		}
 
 		static void CreateSlotAnim(ArmatureEditor armatureEditor, AnimationClip clip , DragonBoneData.AnimSubData[] subDatas , Dictionary<string,Transform> transformKV)
