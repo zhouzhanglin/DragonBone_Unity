@@ -15,10 +15,12 @@ namespace DragonBone
 	public class AnimFile {
 
 		private static Dictionary<string,string> slotPathKV = null;
+		private static int tempZNumber = 0;
 
 		public static void CreateAnimFile(ArmatureEditor armatureEditor)
 		{
 			slotPathKV = new Dictionary<string, string>();
+			tempZNumber = 0;
 
 			string path = AssetDatabase.GetAssetPath(armatureEditor.animTextAsset);
 			path = path.Substring(0,path.LastIndexOf('/'))+"/"+armatureEditor.armature.name+"_Anims";
@@ -126,7 +128,6 @@ namespace DragonBone
 		static void CreateAnimZOrder(ArmatureEditor armatureEditor, AnimationClip clip , DragonBoneData.AnimSubData[] subDatas)
 		{
 			if(subDatas==null) return;
-			int tempNumber = 1;
 			int len = subDatas.Length;
 			AnimationCurve armatureCurve = new AnimationCurve();
 			float perKeyTime = 1f/armatureEditor.armatureData.frameRate;
@@ -175,8 +176,8 @@ namespace DragonBone
 							curve.AddKey( new Keyframe(during,changeZ,float.PositiveInfinity,float.PositiveInfinity));
 
 							//set Armature zorder invalid
-							armatureCurve.AddKey(new Keyframe(during,tempNumber,float.PositiveInfinity,float.PositiveInfinity));
-							++tempNumber;
+//							++tempZNumber;
+//							armatureCurve.AddKey(new Keyframe(during,tempZNumber,float.PositiveInfinity,float.PositiveInfinity));
 						}
 					}
 					else
@@ -201,8 +202,8 @@ namespace DragonBone
 							curve.AddKey( new Keyframe(during,0,float.PositiveInfinity,float.PositiveInfinity));
 						}
 						//set Armature zorder invalid
-						armatureCurve.AddKey(new Keyframe(during,tempNumber,float.PositiveInfinity,float.PositiveInfinity));
-						++tempNumber;
+						++tempZNumber;
+						armatureCurve.AddKey(new Keyframe(during,tempZNumber,float.PositiveInfinity,float.PositiveInfinity));
 					}
 					during+= frameData.duration*perKeyTime;
 				}
