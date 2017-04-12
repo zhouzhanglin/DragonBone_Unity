@@ -533,7 +533,7 @@ namespace DragonBone
 				}
 
 				if(rotatecurve.keys !=null && rotatecurve.keys.Length>0 && CheckCurveValid(rotatecurve,defaultTransformData.rotate)){
-					CurveExtension.ClampCurveRotate360(rotatecurve);
+					CurveExtension.ClampCurveRotate360(rotatecurve,armatureEditor.rotateCicle);
 					if(isHaveCurve) SetCustomRotateCurveTangents(rotatecurve,animSubData.frameDatas);
 					CurveExtension.UpdateAllLinearTangents(rotatecurve);
 					clip.SetCurve(path,typeof(Transform),"localEulerAngles.z",rotatecurve);

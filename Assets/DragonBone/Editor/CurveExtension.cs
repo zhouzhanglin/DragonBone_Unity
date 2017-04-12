@@ -58,19 +58,22 @@ namespace CurveExtended{
 			}
 		}
 
-		public static void ClampCurveRotate360(AnimationCurve rotatecurve){
+		public static void ClampCurveRotate360(AnimationCurve rotatecurve,bool rotateCicle){
 			if(rotatecurve.length>1){
 				for(int f=1;f<rotatecurve.length;++f){
-					ClampCurveRotate360(rotatecurve,f);
+					ClampCurveRotate360(rotatecurve,f,rotateCicle);
 				}
 			}
 		}
-		public static void ClampCurveRotate360(AnimationCurve rotatecurve,int f){
+		public static void ClampCurveRotate360(AnimationCurve rotatecurve,int f,bool rotateCicle){
 			float prev = rotatecurve.keys[f-1].value;
 			float curr = rotatecurve.keys[f].value;
-			if(curr<-180f || curr>180f) return;
-			if(prev<-180f||prev>180f){
-				if(f>1) prev = rotatecurve.keys[f-2].value;
+
+			if(rotateCicle){
+				if(curr<-180f || curr>180f) return;
+				if(prev<-180f||prev>180f){
+					if(f>1) prev = rotatecurve.keys[f-2].value;
+				}
 			}
 
 			while ((curr - prev) > 180 ){
