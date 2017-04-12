@@ -392,6 +392,7 @@ namespace DragonBone
 				AnimationCurve sxcurve = new AnimationCurve();
 				AnimationCurve sycurve = new AnimationCurve();
 				AnimationCurve rotatecurve = new AnimationCurve();
+				bool rotateCicle = false;
 
 				float during = animSubData.offset;
 				float perKeyTime = 1f/armatureEditor.armatureData.frameRate;
@@ -466,6 +467,7 @@ namespace DragonBone
 									endRotate -= deltaRotate;
 									//insert keyframe
 									rotatecurve.AddKey(KeyframeUtil.GetNew(during-perKeyTime,endRotate+defaultTransformData.rotate,tanModeL,TangentMode.Stepped));
+									rotateCicle = true;
 								}
 							}
 						}
@@ -533,7 +535,7 @@ namespace DragonBone
 				}
 
 				if(rotatecurve.keys !=null && rotatecurve.keys.Length>0 && CheckCurveValid(rotatecurve,defaultTransformData.rotate)){
-					CurveExtension.ClampCurveRotate360(rotatecurve,armatureEditor.rotateCicle);
+					CurveExtension.ClampCurveRotate360(rotatecurve,rotateCicle);
 					if(isHaveCurve) SetCustomRotateCurveTangents(rotatecurve,animSubData.frameDatas);
 					CurveExtension.UpdateAllLinearTangents(rotatecurve);
 					clip.SetCurve(path,typeof(Transform),"localEulerAngles.z",rotatecurve);
