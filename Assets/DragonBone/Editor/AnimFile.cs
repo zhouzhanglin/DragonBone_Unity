@@ -605,6 +605,20 @@ namespace DragonBone
 						color_bcurve.AddKey(KeyframeUtil.GetNew(during,c.b,tanModeL,tanModeR));
 						color_acurve.AddKey(KeyframeUtil.GetNew(during,c.a,tanModeL,tanModeR));
 					}
+					else if(color_rcurve.length>0)
+					{
+						if(defaultColorData==null) defaultColorData = new DragonBoneData.ColorData();
+						Color c = new Color();
+						c.a = defaultColorData.aM+defaultColorData.a0;
+						c.r = defaultColorData.rM+defaultColorData.r0;
+						c.g = defaultColorData.gM+defaultColorData.g0;
+						c.b = defaultColorData.bM+defaultColorData.b0;
+						color_rcurve.AddKey(KeyframeUtil.GetNew(during,c.r,tanModeL,tanModeR));
+						color_gcurve.AddKey(KeyframeUtil.GetNew(during,c.g,tanModeL,tanModeR));
+						color_bcurve.AddKey(KeyframeUtil.GetNew(during,c.b,tanModeL,tanModeR));
+						color_acurve.AddKey(KeyframeUtil.GetNew(during,c.a,tanModeL,tanModeR));
+					}
+
 
 					//改displyindex
 					if(frameData.displayIndex>-2)
