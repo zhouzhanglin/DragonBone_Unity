@@ -237,16 +237,14 @@ namespace DragonBone
 					vertexcurveyArray = new List<AnimationCurve[]>();
 					for(int j=0;j<slotNode.childCount;++j){
 						Transform ffdNode = slotNode.GetChild(j);
-						if(ffdNode.name==animSubData.name){
-							AnimationCurve[] vertex_xcurves = new AnimationCurve[ffdNode.childCount];
-							AnimationCurve[] vertex_ycurves = new AnimationCurve[ffdNode.childCount];
-							for(int r=0;r<vertex_xcurves.Length;++r){
-								vertex_xcurves[r] = new AnimationCurve();
-								vertex_ycurves[r] = new AnimationCurve();
-							}
-							vertexcurvexArray.Add(vertex_xcurves);
-							vertexcurveyArray.Add(vertex_ycurves);
+						AnimationCurve[] vertex_xcurves = new AnimationCurve[ffdNode.childCount];
+						AnimationCurve[] vertex_ycurves = new AnimationCurve[ffdNode.childCount];
+						for(int r=0;r<vertex_xcurves.Length;++r){
+							vertex_xcurves[r] = new AnimationCurve();
+							vertex_ycurves[r] = new AnimationCurve();
 						}
+						vertexcurvexArray.Add(vertex_xcurves);
+						vertexcurveyArray.Add(vertex_ycurves);
 					}
 				}
 
