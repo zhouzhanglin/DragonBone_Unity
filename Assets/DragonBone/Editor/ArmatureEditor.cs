@@ -398,7 +398,7 @@ namespace DragonBone
 				poseData.displayDatas[i].transform.sy = render.transform.localScale.y;
 				poseData.displayDatas[i].transform.rotation = render.transform.localEulerAngles.z;
 			}
-			AssetDatabase.CreateAsset(poseData,path+"_Data.asset");
+			AssetDatabase.CreateAsset(poseData,path+"_Pose.asset");
 			dba.poseData = poseData;
 
 

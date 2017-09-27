@@ -34,7 +34,7 @@ namespace DragonBone
 
 
 		private Animator m_animator;
-		public Animator aniamtor{
+		public Animator animator{
 			get { 
 				if(m_animator==null) m_animator = gameObject.GetComponent<Animator>();
 				return m_animator;
@@ -243,28 +243,25 @@ namespace DragonBone
 			ResetSlotZOrder();
 		}
 
+		void Update(){
+			if(Application.isPlaying){
+				if(animator!=null && animator.enabled)
+				{
+					UpdateSlots();
+				}
+			}
+		}
+
 		/// <summary>
 		/// Lates the update. Sort slot
 		/// </summary>
 		void LateUpdate(){
 			#if UNITY_EDITOR
-			if(Application.isPlaying){
-				if(aniamtor!=null && aniamtor.enabled)
+			if(!Application.isPlaying){
+				if(animator!=null)
 				{
 					UpdateSlots();
 				}
-			}
-			else
-			{
-				if(aniamtor!=null)
-				{
-					UpdateSlots();
-				}
-			}
-			#else
-			if(aniamtor!=null && aniamtor.enabled)
-			{
-				UpdateArmature();
 			}
 			#endif
 			if(m_CanSortAllSlot){
