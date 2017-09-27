@@ -96,7 +96,7 @@ namespace DragonBone
 		public void UpdateSlot(){
 			if(transform.childCount>0){
 				int tempIndex = Mathf.RoundToInt(m_DisplayIndex);
-				if(Mathf.Abs(m_DisplayIndex-tempIndex)<0.0001f){
+				if(transform.childCount>0 && Mathf.Abs(m_DisplayIndex-tempIndex)<0.0001f){
 					if(tempIndex!=__displayIndex){
 						if(__displayIndex>-1) transform.GetChild(__displayIndex).gameObject.SetActive(false);
 						if(tempIndex>-1) transform.GetChild(tempIndex).gameObject.SetActive(true);

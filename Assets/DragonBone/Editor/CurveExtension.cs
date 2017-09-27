@@ -42,6 +42,10 @@ namespace CurveExtended{
 
 
 
+
+
+
+
 		#region custom curve
 
 		public static void OptimizesCurve( AnimationCurve curve){
@@ -58,24 +62,23 @@ namespace CurveExtended{
 			}
 		}
 
-		public static void ClampCurveRotate360(AnimationCurve rotatecurve,bool rotateCicle){
+		public static void ClampCurveRotate360(AnimationCurve rotatecurve,bool rotateCircle = true){
 			if(rotatecurve.length>1){
 				for(int f=1;f<rotatecurve.length;++f){
-					ClampCurveRotate360(rotatecurve,f,rotateCicle);
+					ClampCurveRotate360(rotatecurve,f,rotateCircle);
 				}
 			}
 		}
-		public static void ClampCurveRotate360(AnimationCurve rotatecurve,int f,bool rotateCicle){
+		public static void ClampCurveRotate360(AnimationCurve rotatecurve,int f,bool rotateCircle){
 			float prev = rotatecurve.keys[f-1].value;
 			float curr = rotatecurve.keys[f].value;
-
-			if(rotateCicle){
+			if(rotateCircle){
+				//rotate beyond 1 circle
 				if(curr<-180f || curr>180f) return;
 				if(prev<-180f||prev>180f){
 					if(f>1) prev = rotatecurve.keys[f-2].value;
 				}
 			}
-
 			while ((curr - prev) > 180 ){
 				curr -= 360;
 			}
@@ -83,13 +86,12 @@ namespace CurveExtended{
 				curr += 360;
 			}
 			if (rotatecurve.keys[f].value != curr){
-				TangentMode modeIn = KeyframeUtil.GetKeyTangentMode(rotatecurve.keys[f-1].tangentMode,(int)rotatecurve.keys[f-1].inTangent);
-				TangentMode modeOut = KeyframeUtil.GetKeyTangentMode(rotatecurve.keys[f-1].tangentMode,(int)rotatecurve.keys[f-1].outTangent);
+				TangentMode modeIn = KeyframeUtil.GetKeyTangentMode(rotatecurve.keys[f].tangentMode,(int)rotatecurve.keys[f].inTangent);
+				TangentMode modeOut = KeyframeUtil.GetKeyTangentMode(rotatecurve.keys[f].tangentMode,(int)rotatecurve.keys[f].outTangent);
 				if(f==rotatecurve.length-1) modeIn = TangentMode.Linear;
 				rotatecurve.MoveKey(f, KeyframeUtil.GetNew(rotatecurve.keys[f].time , curr,modeIn,modeOut ));
 			}
 		}
-
 
 		// p0, p3 - start, end points
 		// p1, p2 - conrol points

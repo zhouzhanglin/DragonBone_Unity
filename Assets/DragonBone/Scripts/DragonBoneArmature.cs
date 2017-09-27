@@ -346,11 +346,13 @@ namespace DragonBone
 		/// update
 		/// </summary>
 		public void UpdateSlots(){
-			int len = slots.Length;
-			for(int i=0;i<len;++i){
-				Slot slot = slots[i];
-				if(slot && slot.isActiveAndEnabled){
-					slot.UpdateSlot();
+			if(slots!=null){
+				int len = slots.Length;
+				for(int i=0;i<len;++i){
+					Slot slot = slots[i];
+					if(slot && slot.isActiveAndEnabled){
+						slot.UpdateSlot();
+					}
 				}
 			}
 		}

@@ -393,112 +393,192 @@ namespace DragonBone
 				if(boneSlotObj.ContainKey("slot")) subData.slot = boneSlotObj["slot"].ToString().Replace('/','_');
 				if(boneSlotObj.ContainKey("scale")) subData.scale = boneSlotObj["scale"].AsFloat;
 				if(boneSlotObj.ContainKey("offset")) subData.offset = boneSlotObj["offset"].AsFloat;
-				if(boneSlotObj.ContainKey("frame")){
+				if(boneSlotObj.ContainKey("frame")){ //for 5.3 以下
 					SimpleJSON.JSONArray frames = boneSlotObj["frame"].AsArray;
-					subData.frameDatas = new DragonBoneData.AnimFrameData[frames.Count];
-					for(int j=0;j<frames.Count;++j){
-						SimpleJSON.JSONClass frameObj = frames[j].AsObject;
-						DragonBoneData.AnimFrameData frameData=new DragonBoneData.AnimFrameData();
-						if(frameObj.ContainKey("duration")) frameData.duration = frameObj["duration"].AsInt;
-						if(frameData.duration==0) frameData.duration=1;
-						if(frameObj.ContainKey("displayIndex")) frameData.displayIndex = frameObj["displayIndex"].AsInt;
-						if(frameObj.ContainKey("z")) frameData.z = -frameObj["z"].AsInt*armatureEditor.zoffset;
-						if(frameObj.ContainKey("tweenEasing") && frameObj["tweenEasing"].ToString()!="null") frameData.tweenEasing = frameObj["tweenEasing"].AsFloat;
-						if(frameObj.ContainKey("tweenRotate")) frameData.tweenRotate = frameObj["tweenRotate"].AsInt;
-						if(frameObj.ContainKey("curve")){
-							SimpleJSON.JSONArray curves = frameObj["curve"].AsArray;
-							if(curves.Count>3){
-								frameData.curve = new float[4]{
-									curves[0].AsFloat,
-									curves[1].AsFloat,
-									curves[curves.Count-2].AsFloat,
-									curves[curves.Count-1].AsFloat
-								};
-							}
+					if(frames != null && frames.Count>0) {
+						subData.frameDatas = new DragonBoneData.AnimFrameData[frames.Count];
+						ParseFrames(armatureEditor,subData.frameDatas,frames,subData.name,DragonBoneData.FrameType.Frame);
+					}
+				}
+				else //for 5.5 及以上
+				{
+					if(boneSlotObj.ContainKey("translateFrame")){
+						SimpleJSON.JSONArray frames = boneSlotObj["translateFrame"].AsArray;
+						if(frames != null && frames.Count>0) {
+							subData.translateFrameDatas = new DragonBoneData.AnimFrameData[frames.Count];
+							ParseFrames(armatureEditor,subData.translateFrameDatas,frames,subData.name,DragonBoneData.FrameType.TranslateFrame);
 						}
-						if(frameObj.ContainKey("transform")){
-							SimpleJSON.JSONClass transformObj = frameObj["transform"].AsObject;
-							DragonBoneData.TransformData transData = new DragonBoneData.TransformData();
-							if(transformObj.ContainKey("x")) {
-								transData.x = transformObj["x"].AsFloat*0.01f;
-							}
-							if(transformObj.ContainKey("y")) {
-								transData.y = -transformObj["y"].AsFloat*0.01f;
-							}
-							if(transformObj.ContainKey("skX")) {
-								transData.rotate = -transformObj["skX"].AsFloat;
-							}
-							if(transformObj.ContainKey("scX")) {
-								transData.scx = transformObj["scX"].AsFloat;
-							}
-							if(transformObj.ContainKey("scY")){
-								transData.scy = transformObj["scY"].AsFloat;
-							}
-							frameData.transformData = transData;
+					}
+					if(boneSlotObj.ContainKey("rotateFrame")){
+						SimpleJSON.JSONArray frames = boneSlotObj["rotateFrame"].AsArray;
+						if(frames != null && frames.Count>0) {
+							subData.rotateFrameDatas = new DragonBoneData.AnimFrameData[frames.Count];
+							ParseFrames(armatureEditor,subData.rotateFrameDatas,frames,subData.name,DragonBoneData.FrameType.RotateFrame);
 						}
-						if(frameObj.ContainKey("color"))
-						{
-							SimpleJSON.JSONClass colorObj = frameObj["color"].AsObject;
-							DragonBoneData.ColorData colorData = new DragonBoneData.ColorData();
-							if(colorObj.ContainKey("aM")) {
-								colorData.aM = colorObj["aM"].AsFloat*0.01f;
-							}
-							if(colorObj.ContainKey("a0")){
-								colorData.aM+=colorObj["a0"].AsFloat/255f;
-							}
-							if(colorObj.ContainKey("rM")) {
-								colorData.rM = colorObj["rM"].AsFloat*0.01f;
-							}
-							if(colorObj.ContainKey("r0")){
-								colorData.rM+=colorObj["r0"].AsFloat/255f;
-							}
-							if(colorObj.ContainKey("gM")) {
-								colorData.gM = colorObj["gM"].AsFloat*0.01f;
-							}
-							if(colorObj.ContainKey("g0")){
-								colorData.gM+=colorObj["g0"].AsFloat/255f;
-							}
-							if(colorObj.ContainKey("bM")) {
-								colorData.bM = colorObj["bM"].AsFloat*0.01f;
-							}
-							if(colorObj.ContainKey("b0")){
-								colorData.bM+=colorObj["b0"].AsFloat/255f;
-							}
-							frameData.color = colorData;
+					}
+					if(boneSlotObj.ContainKey("scaleFrame")){
+						SimpleJSON.JSONArray frames = boneSlotObj["scaleFrame"].AsArray;
+						if(frames != null && frames.Count>0) {
+							subData.scaleFrameDatas = new DragonBoneData.AnimFrameData[frames.Count];
+							ParseFrames(armatureEditor,subData.scaleFrameDatas,frames,subData.name,DragonBoneData.FrameType.ScaleFrame);
 						}
+					}
 
-						//ffd animation
-						//vertex offset
-						bool startFromY = false;
-						if(frameObj.ContainKey("offset")){
-							startFromY = frameObj["offset"].AsInt%2!=0;//从Y开始
-							frameData.offset = frameObj["offset"].AsInt/2;
+					if(boneSlotObj.ContainKey("colorFrame")){
+						SimpleJSON.JSONArray frames = boneSlotObj["colorFrame"].AsArray;
+						if(frames != null && frames.Count>0) {
+							subData.colorFrameDatas = new DragonBoneData.AnimFrameData[frames.Count];
+							ParseFrames(armatureEditor,subData.colorFrameDatas,frames,subData.name,DragonBoneData.FrameType.ColorFrame);
 						}
-						if(frameObj.ContainKey("vertices")){ //local vertex
-							SimpleJSON.JSONArray verticesObj = frameObj["vertices"].AsArray;
-							int index=0;
-							int k= 0;
-							if(startFromY) {
-								frameData.vertices = new Vector2[verticesObj.Count/2+1];
-								frameData.vertices[index]=new Vector2(0,-verticesObj[k].AsFloat*0.01f);
-								k = 1;
-								++index;
-							}else{
-								frameData.vertices = new Vector2[verticesObj.Count/2];
-							}
-							for(;k<verticesObj.Count && k+1<verticesObj.Count;k+=2)
-							{
-								frameData.vertices[index]=new Vector2(verticesObj[k].AsFloat*0.01f,-verticesObj[k+1].AsFloat*0.01f);
-								++index;
-							}
-							armatureEditor.ffdKV[subData.name] = true;
+					}
+
+					if(boneSlotObj.ContainKey("displayFrame")){
+						SimpleJSON.JSONArray frames = boneSlotObj["displayFrame"].AsArray;
+						if(frames != null && frames.Count>0) {
+							subData.displayFrameDatas = new DragonBoneData.AnimFrameData[frames.Count];
+							ParseFrames(armatureEditor,subData.displayFrameDatas,frames,subData.name,DragonBoneData.FrameType.DisplayFrame);
 						}
-						subData.frameDatas[j] = frameData;
 					}
 				}
 				animDatas[i] = subData;
 			}
 
+		}
+
+		static void ParseFrames(ArmatureEditor armatureEditor,DragonBoneData.AnimFrameData[] frameDatas, SimpleJSON.JSONArray frames,string subDataName,DragonBoneData.FrameType type){
+			for(int j=0;j<frames.Count;++j){
+				SimpleJSON.JSONClass frameObj = frames[j].AsObject;
+				DragonBoneData.AnimFrameData frameData=new DragonBoneData.AnimFrameData();
+				if(frameObj.ContainKey("duration")) frameData.duration = frameObj["duration"].AsInt;
+				if(frameData.duration==0) frameData.duration=1;
+				if(frameObj.ContainKey("displayIndex")) frameData.displayIndex = frameObj["displayIndex"].AsInt;
+				if (type == DragonBoneData.FrameType.DisplayFrame) {
+					if (frameObj.ContainKey ("value")) {
+						frameData.displayIndex = frameObj ["value"].AsInt;
+					}
+				}
+				if(frameObj.ContainKey("z")) frameData.z = -frameObj["z"].AsInt*armatureEditor.zoffset;
+				if(frameObj.ContainKey("tweenEasing") && frameObj["tweenEasing"].ToString()!="null") frameData.tweenEasing = frameObj["tweenEasing"].AsFloat;
+				if(frameObj.ContainKey("tweenRotate")) frameData.tweenRotate = frameObj["tweenRotate"].AsInt;
+				if(frameObj.ContainKey("curve")){
+					SimpleJSON.JSONArray curves = frameObj["curve"].AsArray;
+					if(curves.Count>3){
+						frameData.curve = new float[4]{
+							curves[0].AsFloat,
+							curves[1].AsFloat,
+							curves[curves.Count-2].AsFloat,
+							curves[curves.Count-1].AsFloat
+						};
+					}
+				}
+				if(frameObj.ContainKey("transform")){
+					SimpleJSON.JSONClass transformObj = frameObj["transform"].AsObject;
+					DragonBoneData.TransformData transData = new DragonBoneData.TransformData();
+					if(transformObj.ContainKey("x")) {
+						transData.x = transformObj["x"].AsFloat*0.01f;
+					}
+					if(transformObj.ContainKey("y")) {
+						transData.y = -transformObj["y"].AsFloat*0.01f;
+					}
+					if(transformObj.ContainKey("skX")) {
+						transData.rotate = -transformObj["skX"].AsFloat;
+					}
+					if(transformObj.ContainKey("scX")) {
+						transData.scx = transformObj["scX"].AsFloat;
+					}
+					if(transformObj.ContainKey("scY")){
+						transData.scy = transformObj["scY"].AsFloat;
+					}
+					frameData.transformData = transData;
+				}
+				else
+				{
+					if(frameObj.ContainKey("x")){
+						if(frameData.transformData==null)
+							frameData.transformData = new DragonBoneData.TransformData();
+						if(type==DragonBoneData.FrameType.TranslateFrame){
+							frameData.transformData.x = frameObj["x"].AsFloat*0.01f;
+						}else{
+							//scx
+							frameData.transformData.scx = frameObj["x"].AsFloat;
+						}
+					}
+					if(frameObj.ContainKey("y")){
+						if(frameData.transformData==null)
+							frameData.transformData = new DragonBoneData.TransformData();
+
+						if(type==DragonBoneData.FrameType.TranslateFrame){
+							frameData.transformData.y = -frameObj["y"].AsFloat*0.01f;
+						}else{
+							//scy
+							frameData.transformData.scy = frameObj["y"].AsFloat;
+						}
+					}
+					if(frameObj.ContainKey("rotate")){
+						if(frameData.transformData==null)
+							frameData.transformData = new DragonBoneData.TransformData();
+						frameData.transformData.rotate = -frameObj["rotate"].AsFloat;
+					}
+				}
+				if(frameObj.ContainKey("color"))
+				{
+					SimpleJSON.JSONClass colorObj = frameObj["color"].AsObject;
+					DragonBoneData.ColorData colorData = new DragonBoneData.ColorData();
+					if(colorObj.ContainKey("aM")) {
+						colorData.aM = colorObj["aM"].AsFloat*0.01f;
+					}
+					if(colorObj.ContainKey("a0")){
+						colorData.aM+=colorObj["a0"].AsFloat/255f;
+					}
+					if(colorObj.ContainKey("rM")) {
+						colorData.rM = colorObj["rM"].AsFloat*0.01f;
+					}
+					if(colorObj.ContainKey("r0")){
+						colorData.rM+=colorObj["r0"].AsFloat/255f;
+					}
+					if(colorObj.ContainKey("gM")) {
+						colorData.gM = colorObj["gM"].AsFloat*0.01f;
+					}
+					if(colorObj.ContainKey("g0")){
+						colorData.gM+=colorObj["g0"].AsFloat/255f;
+					}
+					if(colorObj.ContainKey("bM")) {
+						colorData.bM = colorObj["bM"].AsFloat*0.01f;
+					}
+					if(colorObj.ContainKey("b0")){
+						colorData.bM+=colorObj["b0"].AsFloat/255f;
+					}
+					frameData.color = colorData;
+				}
+
+				//ffd animation
+				//vertex offset
+				bool startFromY = false;
+				if(frameObj.ContainKey("offset")){
+					startFromY = frameObj["offset"].AsInt%2!=0;//从Y开始
+					frameData.offset = frameObj["offset"].AsInt/2;
+				}
+				if(frameObj.ContainKey("vertices")){ //local vertex
+					SimpleJSON.JSONArray verticesObj = frameObj["vertices"].AsArray;
+					int index=0;
+					int k= 0;
+					if(startFromY) {
+						frameData.vertices = new Vector2[verticesObj.Count/2+1];
+						frameData.vertices[index]=new Vector2(0,-verticesObj[k].AsFloat*0.01f);
+						k = 1;
+						++index;
+					}else{
+						frameData.vertices = new Vector2[verticesObj.Count/2];
+					}
+					for(;k<verticesObj.Count && k+1<verticesObj.Count;k+=2)
+					{
+						frameData.vertices[index]=new Vector2(verticesObj[k].AsFloat*0.01f,-verticesObj[k+1].AsFloat*0.01f);
+						++index;
+					}
+					armatureEditor.ffdKV[subDataName] = true;
+				}
+				frameDatas[j] = frameData;
+			}
 		}
 	}
 
