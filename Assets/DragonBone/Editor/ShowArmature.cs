@@ -557,7 +557,7 @@ namespace DragonBone
 							Vector3 bonePos = bone.localPosition;
 							Quaternion boneRotate = bone.localRotation;
 
-							Matrix2D m2d= armatureEditor.bonePoseKV[bone.name];
+							Matrix2D m2d= armatureEditor.bonePoseKV[displayData.textureName + bone.name];
 							bone.position = new Vector3(m2d.tx*0.01f,-m2d.ty*0.01f,bone.position.z);
 							bone.rotation = Quaternion.Euler(0f,0f,-m2d.GetAngle());
 

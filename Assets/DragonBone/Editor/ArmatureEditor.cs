@@ -60,7 +60,7 @@ namespace DragonBone
 		public Dictionary<string,Sprite> spriteKV = new Dictionary<string, Sprite>();//single sprite
 
 		public Dictionary<string , Atlas> atlasKV = new Dictionary<string, Atlas>();
-		public Dictionary<string,Matrix2D> bonePoseKV = new Dictionary<string, Matrix2D>() ; //bonePose , key is bone name
+		public Dictionary<string,Matrix2D> bonePoseKV = new Dictionary<string, Matrix2D>() ; //bonePose , key is textureName + bone name
 		public Dictionary<string,bool> ffdKV = new Dictionary<string, bool>();//skinnedMesh animation or ffd animation, key is skin name/texture name
 
 		public Dictionary<Material,bool> spriteMeshUsedMatKV = new Dictionary<Material, bool>();
