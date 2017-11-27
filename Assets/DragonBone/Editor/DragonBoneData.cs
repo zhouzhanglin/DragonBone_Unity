@@ -135,6 +135,7 @@ namespace DragonBone
 		}
 		public class SkinSlotDisplayData{
 			public string textureName;
+			public string texturePath;
 			public string type = "image";//armature,mesh,boundingBox
 			public string subType="polygon";
 			public Vector2 pivot = new Vector2(0.5f,0.5f);
