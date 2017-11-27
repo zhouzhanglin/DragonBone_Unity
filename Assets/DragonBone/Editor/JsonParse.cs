@@ -290,7 +290,7 @@ namespace DragonBone
 
 											Matrix2D m = new Matrix2D(displayData.bonePose[z+1],displayData.bonePose[z+2],
 												displayData.bonePose[z+3],displayData.bonePose[z+4],displayData.bonePose[z+5],displayData.bonePose[z+6]);
-											armatureEditor.bonePoseKV[armatureEditor.armatureData.boneDatas[ (int)displayData.bonePose[z]].name ] = m;
+											armatureEditor.bonePoseKV[displayData.textureName + armatureEditor.armatureData.boneDatas[(int)displayData.bonePose[z]].name ] = m;
 										}
 									}
 
