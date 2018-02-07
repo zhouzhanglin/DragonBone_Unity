@@ -27,6 +27,8 @@ namespace DragonBone
 		private SpriteMesh m_SpriteMesh = null;
 		private SpriteRenderer m_SpriteRenderer = null;
 
+		[HideInInspector]
+		[SerializeField]
 		private int __z=0;
 		[HideInInspector]
 		[SerializeField]
@@ -39,8 +41,9 @@ namespace DragonBone
 			}
 		}
 
-		protected int __displayIndex;
 		[HideInInspector]
+		[SerializeField]
+		protected int __displayIndex;
 		[SerializeField]
 		private float m_DisplayIndex;
 		public int displayIndex{
@@ -93,7 +96,7 @@ namespace DragonBone
 		public void UpdateSlot(){
 			if(transform.childCount>0){
 				int tempIndex = Mathf.RoundToInt(m_DisplayIndex);
-				if(Mathf.Abs(m_DisplayIndex-tempIndex)<0.0001f){
+				if(transform.childCount>0 && Mathf.Abs(m_DisplayIndex-tempIndex)<0.0001f){
 					if(tempIndex!=__displayIndex){
 						if(__displayIndex>-1) transform.GetChild(__displayIndex).gameObject.SetActive(false);
 						if(tempIndex>-1) transform.GetChild(tempIndex).gameObject.SetActive(true);

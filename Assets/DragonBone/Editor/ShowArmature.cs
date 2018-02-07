@@ -229,7 +229,7 @@ namespace DragonBone
 									continue;
 								}
 
-								ArmatureEditor.Atlas atlas = armatureEditor.GetAtlasByTextureName(displayData.textureName);
+								ArmatureEditor.Atlas atlas = armatureEditor.GetAtlasByTextureName(displayData.texturePath);
 								if(!armatureEditor.isSingleSprite){
 									atlasMat = matKV[atlas.texture];
 									frame = frameKV[atlas.texture];
@@ -255,7 +255,7 @@ namespace DragonBone
 										{
 											SpriteMetaData metaData = new SpriteMetaData();
 											metaData.name = displayData.textureName;
-											metaData.rect = frame.GetFrameByName(displayData.textureName).rect;
+											metaData.rect = frame.GetFrameByName(displayData.texturePath).rect;
 											metaData.rect.y = armatureEditor.altasTexture.height-metaData.rect.y-metaData.rect.height;
 											if(displayData.pivot.x!=0 || displayData.pivot.y!=0 ){
 												metaData.alignment = (int)SpriteAlignment.Custom;
@@ -557,7 +557,7 @@ namespace DragonBone
 							Vector3 bonePos = bone.localPosition;
 							Quaternion boneRotate = bone.localRotation;
 
-							Matrix2D m2d= armatureEditor.bonePoseKV[bone.name];
+							Matrix2D m2d= armatureEditor.bonePoseKV[displayData.textureName + bone.name];
 							bone.position = new Vector3(m2d.tx*0.01f,-m2d.ty*0.01f,bone.position.z);
 							bone.rotation = Quaternion.Euler(0f,0f,-m2d.GetAngle());
 

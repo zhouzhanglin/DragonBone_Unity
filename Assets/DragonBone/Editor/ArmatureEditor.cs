@@ -60,7 +60,7 @@ namespace DragonBone
 		public Dictionary<string,Sprite> spriteKV = new Dictionary<string, Sprite>();//single sprite
 
 		public Dictionary<string , Atlas> atlasKV = new Dictionary<string, Atlas>();
-		public Dictionary<string,Matrix2D> bonePoseKV = new Dictionary<string, Matrix2D>() ; //bonePose , key is bone name
+		public Dictionary<string,Matrix2D> bonePoseKV = new Dictionary<string, Matrix2D>() ; //bonePose , key is textureName + bone name
 		public Dictionary<string,bool> ffdKV = new Dictionary<string, bool>();//skinnedMesh animation or ffd animation, key is skin name/texture name
 
 		public Dictionary<Material,bool> spriteMeshUsedMatKV = new Dictionary<Material, bool>();
@@ -76,9 +76,12 @@ namespace DragonBone
 			ArmatureEditor editor = ScriptableWizard.DisplayWizard<ArmatureEditor>("Create DragonBone", "Create");
 			editor.minSize = new Vector2(200f,400f);
 
-			if(Selection.activeObject is DefaultAsset)
+			if(Selection.activeObject != null)
 			{
 				string dirPath = AssetDatabase.GetAssetOrScenePath(Selection.activeObject);
+				if(File.Exists(dirPath)){
+					dirPath = dirPath.Substring(0,dirPath.LastIndexOf("/"));
+				}
 				if(Directory.Exists(dirPath)){
 					string animJsonPath=null;
 					Dictionary<string,string> texturePathKV = new Dictionary<string, string>();
@@ -160,9 +163,12 @@ namespace DragonBone
 		}
 
 		static void CreateDragonBoneByDir(bool useUnitySprite){
-			if(Selection.activeObject is DefaultAsset)
+			if(Selection.activeObject != null)
 			{
 				string dirPath = AssetDatabase.GetAssetOrScenePath(Selection.activeObject);
+				if(File.Exists(dirPath)){
+					dirPath = dirPath.Substring(0,dirPath.LastIndexOf("/"));
+				}
 				if(Directory.Exists(dirPath)){
 					string animJsonPath=null;
 					Dictionary<string,string> texturePathKV = new Dictionary<string, string>();
@@ -254,6 +260,7 @@ namespace DragonBone
 
 
 		public void OnWizardCreate(){
+			Debug.ClearDeveloperConsole();
 			if(isSingleSprite){
 				useUnitySprite = true;
 			}
@@ -316,7 +323,7 @@ namespace DragonBone
 				slots[s].displayIndex = slots[s].displayIndex;
 			}
 
-			Renderer[] renders = _armature.GetComponentsInChildren<Renderer>();
+			Renderer[] renders = _armature.GetComponentsInChildren<Renderer>(true);
 			foreach(Renderer r in renders){
 				if(r.GetComponent<SpriteFrame>()){
 					//optimize memory
@@ -327,17 +334,82 @@ namespace DragonBone
 			}
 			dba.attachments = renders;
 			dba.slots = slots.ToArray();
+			dba.bones = bones.ToArray();
 			dba.zSpace = zoffset;
 			dba.ResetSlotZOrder();
 
 			string path = AssetDatabase.GetAssetPath(animTextAsset);
-			path = path.Substring(0,path.LastIndexOf('/'))+"/"+_armature.name+".prefab";
-			GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+			path = path.Substring(0,path.LastIndexOf('/'))+"/"+_armature.name;
+
+
+			//create pose data
+			PoseData poseData = ScriptableObject.CreateInstance<PoseData>();
+			poseData.slotDatas = new PoseData.SlotData[slots.Count];
+			for(int i=0;i<slots.Count;++i){
+				poseData.slotDatas[i] = new PoseData.SlotData();
+				poseData.slotDatas[i].color = slots[i].color;
+				poseData.slotDatas[i].displayIndex = slots[i].displayIndex;
+				poseData.slotDatas[i].zorder = slots[i].z;
+			}
+			poseData.boneDatas = new PoseData.TransformData[bones.Count];
+			for(int i=0;i<bones.Count;++i){
+				poseData.boneDatas[i] = new PoseData.TransformData();
+				poseData.boneDatas[i].x = bones[i].localPosition.x;
+				poseData.boneDatas[i].y = bones[i].localPosition.y;
+				poseData.boneDatas[i].sx = bones[i].localScale.x;
+				poseData.boneDatas[i].sy = bones[i].localScale.y;
+				poseData.boneDatas[i].rotation = bones[i].localEulerAngles.z;
+			}
+			poseData.displayDatas = new PoseData.DisplayData[dba.attachments.Length];
+			for(int i=0;i<dba.attachments.Length;++i){
+				poseData.displayDatas[i] = new PoseData.DisplayData();
+				Renderer render = dba.attachments[i];
+
+				SpriteFrame sf = render.GetComponent<SpriteFrame>();
+				if(sf){
+					poseData.displayDatas[i].type= PoseData.AttachmentType.IMG;
+					poseData.displayDatas[i].color = sf.color;
+				}
+				else
+				{
+					SpriteMesh sm = render.GetComponent<SpriteMesh>();
+					if(sm){
+						poseData.displayDatas[i].type= PoseData.AttachmentType.MESH;
+						poseData.displayDatas[i].color = sm.color;
+						poseData.displayDatas[i].vertex = sm.vertices;
+					}
+					else
+					{
+						SpriteRenderer sr = render.GetComponent<SpriteRenderer>();
+						if(sr){
+							poseData.displayDatas[i].type= PoseData.AttachmentType.IMG;
+							poseData.displayDatas[i].color = sr.color;
+						}
+						else
+						{
+							poseData.displayDatas[i].type= PoseData.AttachmentType.BOX;
+						}
+					}
+				}
+				poseData.displayDatas[i].transform = new PoseData.TransformData();
+				poseData.displayDatas[i].transform.x = render.transform.localPosition.x;
+				poseData.displayDatas[i].transform.y = render.transform.localPosition.y;
+				poseData.displayDatas[i].transform.sx = render.transform.localScale.x;
+				poseData.displayDatas[i].transform.sy = render.transform.localScale.y;
+				poseData.displayDatas[i].transform.rotation = render.transform.localEulerAngles.z;
+			}
+			AssetDatabase.CreateAsset(poseData,path+"_Pose.asset");
+			dba.poseData = poseData;
+
+
+			string prefabPath = path+".prefab";
+			GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
 			if(!prefab){
-				PrefabUtility.CreatePrefab(path,_armature.gameObject,ReplacePrefabOptions.ConnectToPrefab);
+				PrefabUtility.CreatePrefab(prefabPath,_armature.gameObject,ReplacePrefabOptions.ConnectToPrefab);
 			}else{
 				PrefabUtility.ReplacePrefab( _armature.gameObject,prefab,ReplacePrefabOptions.ConnectToPrefab);
 			}
+
 		}
 	}
 }

@@ -88,8 +88,25 @@ namespace DragonBone
 			public string slot;//如果有slot，就用slot
 			public float scale=1f;
 			public float offset=0f;
-			public AnimFrameData[] frameDatas;
+			public AnimFrameData[] frameDatas;//for 5.3
+
+			//for 5.5
+			public AnimFrameData[] translateFrameDatas;
+			public AnimFrameData[] rotateFrameDatas;
+			public AnimFrameData[] scaleFrameDatas;
+			public AnimFrameData[] colorFrameDatas;
+			public AnimFrameData[] displayFrameDatas;
 		}
+
+		public enum FrameType{
+			Frame,
+			TranslateFrame,
+			RotateFrame,
+			ScaleFrame,
+			ColorFrame,
+			DisplayFrame
+		}
+
 		public class AnimFrameData { //此动画包含的关键帧列表
 			public int duration = 1;
 			public float[] curve;
@@ -100,6 +117,7 @@ namespace DragonBone
 			public float z;
 			public TransformData transformData ;
 			public ColorData color;
+			public FrameType frameType = FrameType.Frame;
 
 			//网格动画
 			public int offset=0;//顶点坐标索引偏移
@@ -117,6 +135,7 @@ namespace DragonBone
 		}
 		public class SkinSlotDisplayData{
 			public string textureName;
+			public string texturePath;
 			public string type = "image";//armature,mesh,boundingBox
 			public string subType="polygon";
 			public Vector2 pivot = new Vector2(0.5f,0.5f);

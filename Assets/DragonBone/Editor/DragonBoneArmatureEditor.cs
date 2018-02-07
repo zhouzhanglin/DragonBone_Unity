@@ -42,7 +42,7 @@ namespace DragonBone
 				EditorUtility.SetDirty(armature);
 			}
 			if(GUILayout.Button("Update All Sorting Order",GUILayout.Height(20))){
-				foreach(Renderer render in armature.GetComponentsInChildren<Renderer>()){
+				foreach(Renderer render in armature.GetComponentsInChildren<Renderer>(true)){
 					render.sortingLayerName = armature.sortingLayerName;
 					render.sortingOrder = armature.sortingOrder;
 					EditorUtility.SetDirty(render);
@@ -60,6 +60,7 @@ namespace DragonBone
 						}
 					}
 				}
+				EditorUtility.SetDirty(armature);
 				if (!string.IsNullOrEmpty(armature.gameObject.scene.name)){
 					UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
 				}
@@ -68,32 +69,38 @@ namespace DragonBone
 			serializedObject.Update();
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_FlipX"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("m_FlipY"), true);
-			EditorGUILayout.PropertyField(serializedObject.FindProperty("zSpace"), true);
+			if(!Application.isPlaying){
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("zSpace"), true);
+			}
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("poseData"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("slots"), true);
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("bones"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("attachments"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("materials"), true);
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("textureFrames"), true);
 			serializedObject.ApplyModifiedProperties();
 
-			if(armature.flipX!=flipX){
-				armature.flipX = armature.flipX;
-				flipX = armature.flipX;
-				if (!string.IsNullOrEmpty(armature.gameObject.scene.name)){
-					UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+			if(!Application.isPlaying){
+				if(armature.flipX!=flipX){
+					armature.flipX = armature.flipX;
+					flipX = armature.flipX;
+					if (!string.IsNullOrEmpty(armature.gameObject.scene.name)){
+						UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+					}
 				}
-			}
-			if(armature.flipY!=flipY){
-				armature.flipY = armature.flipY;
-				flipY = armature.flipY;
-				if (!string.IsNullOrEmpty(armature.gameObject.scene.name)){
-					UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+				if(armature.flipY!=flipY){
+					armature.flipY = armature.flipY;
+					flipY = armature.flipY;
+					if (!string.IsNullOrEmpty(armature.gameObject.scene.name)){
+						UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+					}
 				}
-			}
-			if(armature.zSpace!=zspace){
-				zspace = armature.zSpace;
-				armature.ResetSlotZOrder();
-				if (!string.IsNullOrEmpty(armature.gameObject.scene.name)){
-					UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+				if(armature.zSpace!=zspace){
+					zspace = armature.zSpace;
+					armature.ResetSlotZOrder();
+					if (!string.IsNullOrEmpty(armature.gameObject.scene.name)){
+						UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+					}
 				}
 			}
 		}

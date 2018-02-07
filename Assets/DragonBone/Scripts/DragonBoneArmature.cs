@@ -14,7 +14,9 @@ namespace DragonBone
 		[SerializeField]
 		private bool m_FlipY;
 
+		public PoseData poseData;
 		public Slot[] slots;
+		public Transform[] bones;
 		public Renderer[] attachments;
 		public Material[] materials;
 		public TextureFrame[] textureFrames;
@@ -23,6 +25,8 @@ namespace DragonBone
 		private int[] m_NewSlotOrders = null ;		
 		private bool m_CanSortAllSlot = false;
 
+		[HideInInspector]
+		[SerializeField]
 		protected int __ZOrderValid = 0;
 		[HideInInspector]
 		[SerializeField]
@@ -30,7 +34,7 @@ namespace DragonBone
 
 
 		private Animator m_animator;
-		public Animator aniamtor{
+		public Animator animator{
 			get { 
 				if(m_animator==null) m_animator = gameObject.GetComponent<Animator>();
 				return m_animator;
@@ -171,28 +175,93 @@ namespace DragonBone
 			return angle;
 		}
 
+		void OnDisable(){
+			if(Application.isPlaying){
+				SetToPose();
+			}
+		}
+
+		/// <summary>
+		/// Sets to pose.
+		/// </summary>
+		public void SetToPose(){
+			if(poseData){
+				for(int i=0;i<poseData.boneDatas.Length && i<bones.Length;++i){
+					Transform bone = bones[i];
+					if(bone){
+						PoseData.TransformData transData = poseData.boneDatas[i];
+						bone.localPosition = new Vector3(transData.x,transData.y,bone.localPosition.z);
+						bone.localScale = new Vector3(transData.sx,transData.sy,bone.localScale.z);
+						bone.localEulerAngles = new Vector3(bone.localEulerAngles.x,bone.localEulerAngles.y,transData.rotation);
+					}
+				}
+				for(int i=0;i<poseData.slotDatas.Length && i<slots.Length;++i){
+					Slot slot = slots[i];
+					if(slot){
+						slot.color = poseData.slotDatas[i].color;
+						slot.displayIndex = poseData.slotDatas[i].displayIndex;
+						slot.z = poseData.slotDatas[i].zorder;
+					}
+				}
+				for(int i=0;i<poseData.displayDatas.Length && i<attachments.Length;++i){
+					Renderer r = attachments[i];
+					if(r){
+						Transform trans = r.transform;
+						PoseData.TransformData transData = poseData.displayDatas[i].transform;
+						trans.localPosition = new Vector3(transData.x,transData.y,trans.localPosition.z);
+						trans.localScale = new Vector3(transData.sx,transData.sy,trans.localScale.z);
+						trans.localEulerAngles = new Vector3(trans.localEulerAngles.x,trans.localEulerAngles.y,transData.rotation);
+
+						PoseData.DisplayData displayData = poseData.displayDatas[i];
+						switch(displayData.type)
+						{
+						case PoseData.AttachmentType.IMG:
+							SpriteFrame sf = r.GetComponent<SpriteFrame>();
+							if(sf){
+								sf.color = displayData.color;
+							}else{
+								SpriteRenderer sr = r.GetComponent<SpriteRenderer>();
+								if(sr){
+									sr.color = displayData.color;
+								}
+							}
+							break;
+						case PoseData.AttachmentType.MESH:
+							SpriteMesh sm = r.GetComponent<SpriteMesh>();
+							sm.vertices = displayData.vertex;
+							for(int j=0;j<sm.vertControlTrans.Length && j<sm.vertices.Length;++j){
+								Transform vctr = sm.vertControlTrans[j];
+								if(vctr){
+									vctr.localPosition = sm.vertices[j];
+								}
+							}
+							break;
+						}
+					}
+				}
+			}
+			ResetSlotZOrder();
+		}
+
+		void Update(){
+			if(Application.isPlaying){
+				if(animator!=null && animator.enabled)
+				{
+					UpdateSlots();
+				}
+			}
+		}
+
 		/// <summary>
 		/// Lates the update. Sort slot
 		/// </summary>
 		void LateUpdate(){
 			#if UNITY_EDITOR
-			if(Application.isPlaying){
-				if(aniamtor!=null && aniamtor.enabled)
+			if(!Application.isPlaying){
+				if(animator!=null)
 				{
 					UpdateSlots();
 				}
-			}
-			else
-			{
-				if(aniamtor!=null)
-				{
-					UpdateSlots();
-				}
-			}
-			#else
-			if(aniamtor!=null && aniamtor.enabled)
-			{
-				UpdateArmature();
 			}
 			#endif
 			if(m_CanSortAllSlot){
@@ -277,11 +346,13 @@ namespace DragonBone
 		/// update
 		/// </summary>
 		public void UpdateSlots(){
-			int len = slots.Length;
-			for(int i=0;i<len;++i){
-				Slot slot = slots[i];
-				if(slot && slot.isActiveAndEnabled){
-					slot.UpdateSlot();
+			if(slots!=null){
+				int len = slots.Length;
+				for(int i=0;i<len;++i){
+					Slot slot = slots[i];
+					if(slot && slot.isActiveAndEnabled){
+						slot.UpdateSlot();
+					}
 				}
 			}
 		}
