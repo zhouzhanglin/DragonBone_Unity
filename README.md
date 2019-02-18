@@ -1,3 +1,5 @@
+#!! 建议使用 https://github.com/zhouzhanglin/Bones2D  !!
+
 # DragonBone_Unity  
 DragonBones是一款免费的动画制作工具，下载地址[http://dragonbones.com](http://dragonbones.com)<br/>
 此插件是直接将DragonBone数据转换成Unity自带的动画，支持骨骼动画，网格动画，蒙皮动画, 碰撞框。需要Unity5.3.x以上
